@@ -1,6 +1,7 @@
-import React from 'react'
-import { Form, Button, Container, Card } from 'react-bootstrap'
-import '../styles/Login.css'
+import React from 'react';
+import { Form, Button, Container, Card } from 'react-bootstrap';
+import { Link } from 'react-router-dom';  
+import '../styles/Login.css';
 
 export default function Login() {
   return (
@@ -33,23 +34,21 @@ export default function Login() {
                 />
               </Form.Group>
 
-              <Form.Group className="mb-4" controlId="formBasicCheckbox">
-                <Form.Check 
-                  type="checkbox" 
-                  label="Remember me" 
-                  className="user-select-none"
-                />
-              </Form.Group>
-
               <div className="d-grid">
                 <Button variant="primary" type="submit" size="lg">
                   Sign In
                 </Button>
               </div>
+
+              {/* Fix: Use Link instead of <a> */}
+              <p className="text-center mt-2">
+                New here? <Link to="/Register" className="text-primary">Register here</Link>
+              </p>
+
             </Form>
           </Card.Body>
         </Card>
       </Container>
     </main>
-  )
+  );
 }
