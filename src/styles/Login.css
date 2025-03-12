@@ -1,0 +1,67 @@
+/* Full-page background container */
+.form-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh; /* Ensure full viewport height */
+  width: 100vw; /* Ensure full viewport width */
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  margin: 0;
+  padding: 20px;
+}
+
+/* Centering the login card */
+.login-card {
+  width: 400px; /* Fixed width */
+  max-width: 90%;
+  border-radius: 15px;
+  background-color: #ffffff;
+  border: none;
+  padding: 20px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+/* Hover effect */
+.login-card:hover {
+  transform: translateY(-5px);
+  transition: transform 0.3s ease;
+}
+
+/* Form input styling */
+.form-control-lg {
+  border-radius: 10px;
+  border: 1.5px solid #e1e1e1;
+}
+
+.form-control-lg:focus {
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+  border-color: #0d6efd;
+}
+
+/* Primary button styling */
+.btn-primary {
+  border-radius: 10px;
+  padding: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(13, 110, 253, 0.3);
+  transition: all 0.3s ease;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .form-wrapper {
+    padding: 10px;
+  }
+  
+  .login-card {
+    width: 90%;
+    margin: 0 auto;
+  }
+}
