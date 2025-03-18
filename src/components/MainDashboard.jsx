@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Bar } from "react-chartjs-2";
+import { Bar, Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   BarElement,
@@ -7,6 +7,8 @@ import {
   LinearScale,
   Tooltip,
   Legend,
+  PointElement,
+  LineElement,
 } from "chart.js";
 import { Button } from "react-bootstrap";
 import { FaBars } from "react-icons/fa";
@@ -14,11 +16,20 @@ import { getBarChartData } from "../services/DashboardApiRequest";
 import "../styles/dashboard.css";
 import { fetchProductNames } from "../services/ProductApiRequest";
 
-ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
+ChartJS.register(
+  BarElement,
+  CategoryScale,
+  LinearScale,
+  Tooltip,
+  Legend,
+  PointElement,
+  LineElement
+);
 
 export default function MainDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [timePeriod, setTimePeriod] = useState("daily");
+  const [lineTimePeriod, setLineTimePeriod] = useState("daily");
   const [chartData, setChartData] = useState({
     labels: [],
     datasets: [
@@ -29,17 +40,28 @@ export default function MainDashboard() {
       },
     ],
   });
+  const [lineChartData, setLineChartData] = useState({
+    labels: [],
+    datasets: [
+      {
+        label: "Total Sales Over Time",
+        data: [],
+        borderColor: "rgba(255, 99, 132, 1)",
+        backgroundColor: "rgba(255, 99, 132, 0.2)",
+        fill: true,
+      },
+    ],
+  });
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
-  // Function to calculate start and end dates based on timePeriod
-  const getDateRange = () => {
+  const getDateRange = (period) => {
     const today = new Date();
     let startDate, endDate;
 
-    switch (timePeriod) {
+    switch (period) {
       case "daily":
-        startDate = endDate = today.toISOString().split("T")[0]; // Today's date
+        startDate = endDate = today.toISOString().split("T")[0];
         break;
       case "weekly":
         startDate = new Date(today.setDate(today.getDate() - 7))
@@ -66,14 +88,13 @@ export default function MainDashboard() {
     return { startDate, endDate };
   };
 
-  // Fetch top-selling items
   const fetchChartData = async () => {
     try {
-      const { startDate, endDate } = getDateRange();
+      const { startDate, endDate } = getDateRange(timePeriod);
       const productNames = await fetchProductNames();
       const data = await getBarChartData(startDate, endDate, productNames);
-      console.log("Fetched data:", data);
-      // Ensure data is structured properly
+      console.log("Fetched bar chart data:", data);
+
       const labels = data.map((item) => item.productName);
       const quantities = data.map((item) => item.quantitySold);
 
@@ -92,10 +113,38 @@ export default function MainDashboard() {
     }
   };
 
-  // Fetch data when component mounts or timePeriod changes
+  const fetchLineChartData = async () => {
+    try {
+      const { startDate, endDate } = getDateRange(lineTimePeriod);
+
+      // Mock data until we connect to backend
+      const labels = ["Day 1", "Day 2", "Day 3", "Day 4", "Day 5"];
+      const sales = [200, 450, 300, 600, 500];
+
+      setLineChartData({
+        labels,
+        datasets: [
+          {
+            label: "Total Sales Over Time",
+            data: sales,
+            borderColor: "rgba(255, 99, 132, 1)",
+            backgroundColor: "rgba(255, 99, 132, 0.2)",
+            fill: true,
+          },
+        ],
+      });
+    } catch (error) {
+      console.error("Error loading line chart data:", error);
+    }
+  };
+
   useEffect(() => {
     fetchChartData();
   }, [timePeriod]);
+
+  useEffect(() => {
+    fetchLineChartData();
+  }, [lineTimePeriod]);
 
   return (
     <div className="dashboard-container">
@@ -119,21 +168,40 @@ export default function MainDashboard() {
 
       {/* Main Content */}
       <div className="dashboard-content">
-        {/* Bottom Bar Chart Section */}
-        <div className="chart-section">
-          <div className="chart-header">
-            <h3>Best Selling Items</h3>
-            <select
-              value={timePeriod}
-              onChange={(e) => setTimePeriod(e.target.value)}
-            >
-              <option value="daily">Daily</option>
-              <option value="weekly">Weekly</option>
-              <option value="monthly">Monthly</option>
-              <option value="yearly">Yearly</option>
-            </select>
+        <div className="charts-container">
+          {/* Bar Chart Section */}
+          <div className="chart-section">
+            <div className="chart-header">
+              <h3>Best Selling Items</h3>
+              <select
+                value={timePeriod}
+                onChange={(e) => setTimePeriod(e.target.value)}
+              >
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="yearly">Yearly</option>
+              </select>
+            </div>
+            <Bar data={chartData} />
           </div>
-          <Bar data={chartData} />
+
+          {/* Line Chart Section - Full Width */}
+          <div className="chart-section">
+            <div className="chart-header">
+              <h3>Total Sales Over Time</h3>
+              <select
+                value={lineTimePeriod}
+                onChange={(e) => setLineTimePeriod(e.target.value)}
+              >
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="yearly">Yearly</option>
+              </select>
+            </div>
+            <Line data={lineChartData} />
+          </div>
         </div>
       </div>
     </div>

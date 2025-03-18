@@ -75,8 +75,16 @@
   width: calc(100% - 60px);
 }
 
-.chart-section {
-  width: 90%;
+.charts-container {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+/* Bar chart - Fixed width */
+.chart-section:first-child {
+  flex: 0 0 30%; /* Fixed width: 30% */
   background: white;
   padding: 20px;
   border-radius: 10px;
@@ -84,7 +92,20 @@
   margin-top: 20px;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch; /* Changed from center to stretch */
+}
+
+/* Line chart - Flexible width */
+.chart-section:last-child {
+  flex: 1; /* Take up remaining space */
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch; /* Changed from center to stretch */
 }
 
 .chart-header {
@@ -93,4 +114,16 @@
   align-items: center;
   width: 100%;
   margin-bottom: 15px;
+}
+
+/* Add these new styles to fix the chart container issues */
+.chart-section canvas {
+  width: 100% !important;
+  height: auto !important;
+  max-height: 300px; /* You can adjust this value as needed */
+}
+
+/* This ensures the Bar and Line components take up the full width of their containers */
+.chart-section > div {
+  width: 100% !important;
 }
