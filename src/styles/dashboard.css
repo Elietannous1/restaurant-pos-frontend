@@ -84,7 +84,8 @@
 
 /* Bar chart - Fixed width */
 .chart-section:first-child {
-  flex: 0 0 30%; /* Fixed width: 30% */
+  flex: 0 0 30%;
+  height: 400px; /* Increase or decrease as you like */
   background: white;
   padding: 20px;
   border-radius: 10px;
@@ -92,7 +93,12 @@
   margin-top: 20px;
   display: flex;
   flex-direction: column;
-  align-items: stretch; /* Changed from center to stretch */
+  align-items: stretch;
+}
+
+.chart-section:first-child canvas {
+  width: 100% !important;
+  height: 100% !important;
 }
 
 /* Line chart - Flexible width */
