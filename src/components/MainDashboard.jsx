@@ -18,6 +18,7 @@ import {
 } from "../services/DashboardApiRequest";
 import "../styles/dashboard.css";
 import { fetchProductNames } from "../services/ProductApiRequest";
+import { useNavigate } from "react-router-dom";
 
 ChartJS.register(
   BarElement,
@@ -55,6 +56,7 @@ export default function MainDashboard() {
       },
     ],
   });
+  const navigate = useNavigate();
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
@@ -94,7 +96,7 @@ export default function MainDashboard() {
   const fetchChartData = async () => {
     try {
       const { startDate, endDate } = getDateRange(timePeriod);
-      const productNames = await fetchProductNames();
+      const { productNames } = await fetchProductNames();
       const data = await getBarChartData(startDate, endDate, productNames);
       console.log("Fetched bar chart data:", data);
 
@@ -162,8 +164,12 @@ export default function MainDashboard() {
           <FaBars />
         </button>
         <nav className="sidebar-nav">
-          <Button variant="primary" className="sidebar-btn">
-            Home
+          <Button
+            variant="primary"
+            className="sidebar-btn"
+            onClick={() => navigate("/CreateOrder")}
+          >
+            Create Order
           </Button>
           <Button variant="primary" className="sidebar-btn">
             Reports
