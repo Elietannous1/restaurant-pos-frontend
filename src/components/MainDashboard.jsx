@@ -12,7 +12,10 @@ import {
 } from "chart.js";
 import { Button } from "react-bootstrap";
 import { FaBars } from "react-icons/fa";
-import { getBarChartData } from "../services/DashboardApiRequest";
+import {
+  getBarChartData,
+  getLineChartData,
+} from "../services/DashboardApiRequest";
 import "../styles/dashboard.css";
 import { fetchProductNames } from "../services/ProductApiRequest";
 
@@ -117,10 +120,15 @@ export default function MainDashboard() {
     try {
       const { startDate, endDate } = getDateRange(lineTimePeriod);
 
-      // Mock data until we connect to backend
-      const labels = ["Day 1", "Day 2", "Day 3", "Day 4", "Day 5"];
-      const sales = [200, 450, 300, 600, 500];
+      // Fetch the line chart data from your backend
+      const data = await getLineChartData(startDate, endDate);
+      // data will be in the format: [{ saleDate: "YYYY-MM-DD", totalSales: number }, ...]
 
+      // Extract labels and sales arrays for Chart.js
+      const labels = data.map((item) => item.saleDate);
+      const sales = data.map((item) => item.totalSales);
+
+      // Update state for lineChartData
       setLineChartData({
         labels,
         datasets: [
@@ -200,7 +208,18 @@ export default function MainDashboard() {
                 <option value="yearly">Yearly</option>
               </select>
             </div>
-            <Line data={lineChartData} />
+            <Line
+              data={lineChartData}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                  },
+                },
+              }}
+            />
           </div>
         </div>
       </div>

@@ -45,3 +45,39 @@ export const getBarChartData = async (startDate, endDate, productNames) => {
     throw error.response?.data || "Failed to fetch dashboard data";
   }
 };
+
+export const getLineChartData = async (startDate, endDate) => {
+  try {
+    const response = await axios.get(`${BaseURL}/sales/top-selling`, {
+      headers: {
+        Authorization: `Bearer ${getToken()}`,
+      },
+      params: { startDate, endDate },
+    });
+
+    if (!response.data || !Array.isArray(response.data)) {
+      throw new Error("Invalid data format received");
+    }
+
+    // Aggregate sales per date
+    const salesByDate = response.data.reduce((acc, sale) => {
+      const { saleDate, quantitySold } = sale;
+      if (!acc[saleDate]) {
+        acc[saleDate] = 0;
+      }
+      acc[saleDate] += quantitySold;
+      return acc;
+    }, {});
+
+    // Convert to array format suitable for Recharts
+    const formattedData = Object.keys(salesByDate).map((date) => ({
+      saleDate: date,
+      totalSales: salesByDate[date],
+    }));
+
+    return formattedData; // [{ saleDate: "2025-02-20", totalSales: 17 }]
+  } catch (error) {
+    console.error("Error fetching line chart data:", error);
+    throw error.response?.data || "Failed to fetch sales data";
+  }
+};
