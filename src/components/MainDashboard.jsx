@@ -19,6 +19,7 @@ import {
 import "../styles/dashboard.css";
 import { fetchProductNames } from "../services/ProductApiRequest";
 import { useNavigate } from "react-router-dom";
+import Sidebar from "./Sidebar";
 
 ChartJS.register(
   BarElement,
@@ -159,26 +160,7 @@ export default function MainDashboard() {
   return (
     <div className="dashboard-container">
       {/* Sidebar */}
-      <div className={`sidebar ${sidebarOpen ? "open" : "closed"}`}>
-        <button className="menu-btn" onClick={toggleSidebar}>
-          <FaBars />
-        </button>
-        <nav className="sidebar-nav">
-          <Button
-            variant="primary"
-            className="sidebar-btn"
-            onClick={() => navigate("/CreateOrder")}
-          >
-            Create Order
-          </Button>
-          <Button variant="primary" className="sidebar-btn">
-            Reports
-          </Button>
-          <Button variant="primary" className="sidebar-btn">
-            Settings
-          </Button>
-        </nav>
-      </div>
+      <Sidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
 
       {/* Main Content */}
       <div className="dashboard-content">
