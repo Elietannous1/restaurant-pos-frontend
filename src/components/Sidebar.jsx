@@ -1,10 +1,13 @@
+// src/components/Sidebar.js
 import React from "react";
 import { Button } from "react-bootstrap";
 import { FaBars } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { useSidebar } from "../context/SideBarContext";
 
-export default function Sidebar(props) {
-  const { sidebarOpen, toggleSidebar } = props;
+import "../styles/sidebar.css";
+export default function Sidebar() {
+  const { sidebarOpen, toggleSidebar } = useSidebar();
   const navigate = useNavigate();
 
   return (

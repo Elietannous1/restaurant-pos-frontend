@@ -1,5 +1,15 @@
+// src/pages/MainDashboard.js
 import React, { useState, useEffect } from "react";
 import { Bar, Line } from "react-chartjs-2";
+import { useNavigate } from "react-router-dom";
+import Sidebar from "../components/Sidebar";
+import { useSidebar } from "../context/SidebarContext";
+import {
+  getBarChartData,
+  getLineChartData,
+} from "../services/DashboardApiRequest";
+import "../styles/dashboard.css";
+import { fetchProductNames } from "../services/ProductApiRequest";
 import {
   Chart as ChartJS,
   BarElement,
@@ -10,16 +20,6 @@ import {
   PointElement,
   LineElement,
 } from "chart.js";
-import { Button } from "react-bootstrap";
-import { FaBars } from "react-icons/fa";
-import {
-  getBarChartData,
-  getLineChartData,
-} from "../services/DashboardApiRequest";
-import "../styles/dashboard.css";
-import { fetchProductNames } from "../services/ProductApiRequest";
-import { useNavigate } from "react-router-dom";
-import Sidebar from "./Sidebar";
 
 ChartJS.register(
   BarElement,
@@ -32,7 +32,7 @@ ChartJS.register(
 );
 
 export default function MainDashboard() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const { sidebarOpen, toggleSidebar } = useSidebar();
   const [timePeriod, setTimePeriod] = useState("daily");
   const [lineTimePeriod, setLineTimePeriod] = useState("daily");
   const [chartData, setChartData] = useState({
@@ -58,8 +58,6 @@ export default function MainDashboard() {
     ],
   });
   const navigate = useNavigate();
-
-  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
   const getDateRange = (period) => {
     const today = new Date();
@@ -122,16 +120,11 @@ export default function MainDashboard() {
   const fetchLineChartData = async () => {
     try {
       const { startDate, endDate } = getDateRange(lineTimePeriod);
-
-      // Fetch the line chart data from your backend
       const data = await getLineChartData(startDate, endDate);
-      // data will be in the format: [{ saleDate: "YYYY-MM-DD", totalSales: number }, ...]
 
-      // Extract labels and sales arrays for Chart.js
       const labels = data.map((item) => item.saleDate);
       const sales = data.map((item) => item.totalSales);
 
-      // Update state for lineChartData
       setLineChartData({
         labels,
         datasets: [
@@ -159,13 +152,9 @@ export default function MainDashboard() {
 
   return (
     <div className="dashboard-container">
-      {/* Sidebar */}
       <Sidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
-
-      {/* Main Content */}
       <div className="dashboard-content">
         <div className="charts-container">
-          {/* Bar Chart Section */}
           <div className="chart-section">
             <div className="chart-header">
               <h3>Best Selling Items</h3>
@@ -181,8 +170,6 @@ export default function MainDashboard() {
             </div>
             <Bar data={chartData} />
           </div>
-
-          {/* Line Chart Section - Full Width */}
           <div className="chart-section">
             <div className="chart-header">
               <h3>Total Sales Over Time</h3>
