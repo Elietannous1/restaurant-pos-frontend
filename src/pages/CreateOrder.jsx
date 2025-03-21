@@ -19,12 +19,12 @@ import { useSidebar } from "../context/SideBarContext";
 export default function CreateOrder() {
   const [orderItems, setOrderItems] = useState([]);
   const [orderStatus, setOrderStatus] = useState("");
-  const [customerName, setCustomerName] = useState("");
+  const [customerName, setCustomerName] = useState(""); // Moved here
   const [quantityInputs, setQuantityInputs] = useState({});
-  const [orderDate] = useState(new Date().toLocaleString());
+  const [orders, setOrders] = useState([]); // holds added orders
   const { sidebarOpen, toggleSidebar } = useSidebar();
 
-  // New states for categories and category products
+  // States for categories and category products
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [categoryProducts, setCategoryProducts] = useState([]);
@@ -63,6 +63,7 @@ export default function CreateOrder() {
     setQuantityInputs((prev) => ({ ...prev, [productId]: quantity }));
   };
 
+  // Add product to current order summary
   const addToOrder = (product) => {
     const quantityToAdd = quantityInputs[product.id] || 1;
     setOrderItems((prevItems) => {
@@ -86,8 +87,9 @@ export default function CreateOrder() {
     );
   };
 
-  const calculateTotalCost = () => {
-    return orderItems
+  // Calculate total cost for a given set of items
+  const calculateTotalCost = (items) => {
+    return items
       .reduce(
         (total, item) => total + (item.product.price || 0) * item.quantity,
         0
@@ -95,18 +97,37 @@ export default function CreateOrder() {
       .toFixed(2);
   };
 
-  const createOrder = () => {
-    console.log("Creating order with items:", orderItems);
-    console.log("Order status:", orderStatus);
-    console.log("Customer name:", customerName);
-    console.log("Order date:", orderDate);
-    console.log("Total cost: $", calculateTotalCost());
+  // Add current order summary to orders list
+  const addOrder = () => {
+    if (orderItems.length === 0) return; // nothing to add
+
+    const newOrder = {
+      items: orderItems,
+      status: orderStatus,
+      date: new Date().toLocaleString(),
+      totalCost: calculateTotalCost(orderItems),
+      customerName: customerName, // store the name if provided
+    };
+
+    setOrders((prev) => [...prev, newOrder]);
+
+    // Clear the current order summary fields
+    setOrderItems([]);
+    setOrderStatus("");
+    setCustomerName(""); // Reset name for next order
+  };
+
+  // Finalize orders (trigger actual order creation)
+  const finalizeOrders = () => {
+    console.log("Finalizing orders:", orders);
+    // Here, call your API or perform finalization logic as needed.
   };
 
   return (
     <div className="create-order-layout d-flex" style={{ minHeight: "100vh" }}>
       {/* Sidebar on the left */}
       <Sidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
+
       {/* Main content on the right */}
       <div className="main-content flex-grow-1 p-4">
         <Container fluid>
@@ -127,146 +148,171 @@ export default function CreateOrder() {
               </Nav>
             </Col>
           </Row>
-          {/* Content Row with gap classes added */}
-          <Row className="gx-4 gy-4">
+
+          {/* CSS Grid with auto auto 1fr columns */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "auto auto 1fr",
+              gap: "1rem",
+              width: "100%",
+              alignItems: "start",
+            }}
+          >
             {/* Available Products */}
-            <Col md={6}>
-              <Card className="shadow mb-4">
-                <Card.Header as="h5" className="bg-primary text-white">
-                  {categories.find((c) => c.categoryId === selectedCategory)
-                    ?.categoryName || "Products"}
-                </Card.Header>
-                <Card.Body>
-                  {categoryProducts.length ? (
-                    <ListGroup variant="flush">
-                      {categoryProducts.map((product) => (
-                        <ListGroup.Item
-                          key={product.id}
-                          className="d-flex justify-content-between align-items-center flex-wrap"
-                        >
-                          <div style={{ flex: "1 1 auto" }}>
-                            {product.productName}
-                          </div>
-                          <div className="d-flex align-items-center">
-                            <Form.Control
-                              type="number"
-                              min="1"
-                              value={quantityInputs[product.id] || 1}
-                              onChange={(e) =>
-                                handleQuantityChange(product.id, e.target.value)
-                              }
-                              style={{ width: "80px", marginRight: "10px" }}
-                            />
-                            <Button
-                              variant="outline-success"
-                              size="sm"
-                              onClick={() => addToOrder(product)}
-                            >
-                              Add to Order
-                            </Button>
-                          </div>
-                        </ListGroup.Item>
-                      ))}
-                    </ListGroup>
-                  ) : (
-                    <p>No products found in this category.</p>
-                  )}
-                </Card.Body>
-              </Card>
-            </Col>
-            {/* Order Summary */}
-            <Col md={4}>
-              <Card className="shadow mb-4">
-                <Card.Header as="h5" className="bg-success text-white">
-                  Order Summary
-                </Card.Header>
-                <Card.Body>
-                  <Card.Title>Selected Products</Card.Title>
-                  {orderItems.length ? (
-                    <ListGroup variant="flush" className="mb-3">
-                      {orderItems.map((item) => (
-                        <ListGroup.Item
-                          key={item.product.id}
-                          className="d-flex justify-content-between align-items-center"
-                        >
-                          <span>
-                            {item.product.productName} (x{item.quantity})
-                          </span>
+            <Card className="shadow">
+              <Card.Header as="h5" className="bg-primary text-white">
+                {categories.find((c) => c.categoryId === selectedCategory)
+                  ?.categoryName || "Products"}
+              </Card.Header>
+              <Card.Body>
+                {categoryProducts.length ? (
+                  <ListGroup variant="flush">
+                    {categoryProducts.map((product) => (
+                      <ListGroup.Item
+                        key={product.id}
+                        className="d-flex justify-content-between align-items-center flex-wrap"
+                      >
+                        <div style={{ flex: "1 1 auto" }}>
+                          {product.productName}
+                        </div>
+                        <div className="d-flex align-items-center">
+                          <Form.Control
+                            type="number"
+                            min="1"
+                            value={quantityInputs[product.id] || 1}
+                            onChange={(e) =>
+                              handleQuantityChange(product.id, e.target.value)
+                            }
+                            style={{ width: "80px", marginRight: "10px" }}
+                          />
                           <Button
-                            variant="outline-danger"
+                            variant="outline-success"
                             size="sm"
-                            onClick={() => removeOrderItem(item.product.id)}
+                            onClick={() => addToOrder(product)}
                           >
-                            Remove
+                            Add to Order
                           </Button>
-                        </ListGroup.Item>
-                      ))}
-                    </ListGroup>
-                  ) : (
-                    <p>No products added yet.</p>
-                  )}
-                  <Form.Group controlId="orderStatus" className="mb-3">
-                    <Form.Label>Order Status</Form.Label>
-                    <Form.Select
-                      value={orderStatus}
-                      onChange={(e) => setOrderStatus(e.target.value)}
-                    >
-                      <option value="">Select Status</option>
-                      <option value="PENDING">PENDING</option>
-                      <option value="PREPARING">PREPARING</option>
-                      <option value="READY">READY</option>
-                      <option value="COMPLETED">COMPLETED</option>
-                    </Form.Select>
-                  </Form.Group>
-                  <Button
-                    variant="primary"
-                    className="w-100"
-                    onClick={createOrder}
-                  >
-                    Create Order
-                  </Button>
-                </Card.Body>
-              </Card>
-            </Col>
-            {/* Order Details */}
-            <Col md={2}>
-              <Card className="shadow mb-4">
-                <Card.Header as="h5" className="bg-info text-white">
-                  Order Details
-                </Card.Header>
-                <Card.Body>
-                  <Form.Group controlId="customerName" className="mb-3">
-                    <Form.Label>Customer Name</Form.Label>
-                    <Form.Control
-                      type="text"
-                      placeholder="Enter customer name"
-                      value={customerName}
-                      onChange={(e) => setCustomerName(e.target.value)}
-                    />
-                  </Form.Group>
-                  <ListGroup variant="flush" className="mb-3">
-                    <ListGroup.Item>
-                      <strong>Total Items:</strong>{" "}
-                      {orderItems.reduce((sum, item) => sum + item.quantity, 0)}
-                    </ListGroup.Item>
-                    <ListGroup.Item>
-                      <strong>Order Date:</strong> {orderDate}
-                    </ListGroup.Item>
-                    <ListGroup.Item>
-                      <strong>Total Cost:</strong> ${calculateTotalCost()}
-                    </ListGroup.Item>
+                        </div>
+                      </ListGroup.Item>
+                    ))}
                   </ListGroup>
-                  <Button
-                    variant="primary"
-                    className="w-100"
-                    onClick={createOrder}
+                ) : (
+                  <p>No products found in this category.</p>
+                )}
+              </Card.Body>
+            </Card>
+
+            {/* Order Summary */}
+            <Card className="shadow">
+              <Card.Header as="h5" className="bg-success text-white">
+                Order Summary
+              </Card.Header>
+              <Card.Body>
+                <Card.Title>Selected Products</Card.Title>
+                {orderItems.length ? (
+                  <ListGroup variant="flush" className="mb-3">
+                    {orderItems.map((item) => (
+                      <ListGroup.Item
+                        key={item.product.id}
+                        className="d-flex justify-content-between align-items-center"
+                      >
+                        <span>
+                          {item.product.productName} (x{item.quantity})
+                        </span>
+                        <Button
+                          variant="outline-danger"
+                          size="sm"
+                          onClick={() => removeOrderItem(item.product.id)}
+                        >
+                          Remove
+                        </Button>
+                      </ListGroup.Item>
+                    ))}
+                  </ListGroup>
+                ) : (
+                  <p>No products added yet.</p>
+                )}
+
+                {/* Customer Name moved here */}
+                <Form.Group controlId="customerName" className="mb-3">
+                  <Form.Label>Customer Name</Form.Label>
+                  <Form.Control
+                    type="text"
+                    placeholder="Enter customer name"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                  />
+                </Form.Group>
+
+                <Form.Group controlId="orderStatus" className="mb-3">
+                  <Form.Label>Order Status</Form.Label>
+                  <Form.Select
+                    value={orderStatus}
+                    onChange={(e) => setOrderStatus(e.target.value)}
                   >
-                    Finalize Order
-                  </Button>
-                </Card.Body>
-              </Card>
-            </Col>
-          </Row>
+                    <option value="">Select Status</option>
+                    <option value="PENDING">PENDING</option>
+                    <option value="PREPARING">PREPARING</option>
+                    <option value="READY">READY</option>
+                    <option value="COMPLETED">COMPLETED</option>
+                  </Form.Select>
+                </Form.Group>
+
+                <Button variant="primary" className="w-100" onClick={addOrder}>
+                  Add Order
+                </Button>
+              </Card.Body>
+            </Card>
+
+            {/* Order Details */}
+            <Card className="shadow">
+              <Card.Header as="h5" className="bg-info text-white">
+                Order Details
+              </Card.Header>
+              <Card.Body>
+                {orders.length ? (
+                  <ListGroup variant="flush" className="mb-3">
+                    {orders.map((order, index) => (
+                      <ListGroup.Item key={index}>
+                        <div>
+                          <strong>
+                            {order.customerName
+                              ? `Order for ${order.customerName}`
+                              : `Order ${index + 1}`}
+                          </strong>
+                        </div>
+                        <div>
+                          <small>{order.date}</small>
+                        </div>
+                        <div>
+                          Items:
+                          <ul style={{ paddingLeft: "1.2rem", margin: 0 }}>
+                            {order.items.map((item, idx) => (
+                              <li key={idx}>
+                                {item.product.productName} (x{item.quantity})
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div>Total: {order.totalCost} LL</div>
+                        <div>Status: {order.status}</div>
+                      </ListGroup.Item>
+                    ))}
+                  </ListGroup>
+                ) : (
+                  <p>No orders added yet.</p>
+                )}
+                <Button
+                  variant="primary"
+                  className="w-100"
+                  onClick={finalizeOrders}
+                >
+                  Finalize Order
+                </Button>
+              </Card.Body>
+            </Card>
+          </div>
         </Container>
       </div>
     </div>

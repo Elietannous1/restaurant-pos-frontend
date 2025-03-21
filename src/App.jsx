@@ -4,7 +4,7 @@ import MainDashboard from "./pages/MainDashboard";
 import CreateOrder from "./pages/CreateOrder";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { Routes, Route } from "react-router-dom";
-import { SidebarProvider } from "./context/SidebarContext";
+import { SidebarProvider } from "./context/SideBarContext";
 
 function App() {
   return (
