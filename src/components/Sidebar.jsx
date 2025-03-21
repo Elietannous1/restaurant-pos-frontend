@@ -4,7 +4,6 @@ import { Button } from "react-bootstrap";
 import { FaBars } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useSidebar } from "../context/SideBarContext";
-
 import "../styles/sidebar.css";
 export default function Sidebar() {
   const { sidebarOpen, toggleSidebar } = useSidebar();

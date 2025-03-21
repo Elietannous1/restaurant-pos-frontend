@@ -1,9 +1,8 @@
 // src/pages/MainDashboard.js
 import React, { useState, useEffect } from "react";
 import { Bar, Line } from "react-chartjs-2";
-import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
-import { useSidebar } from "../context/SidebarContext";
+import { useSidebar } from "../context/SideBarContext";
 import {
   getBarChartData,
   getLineChartData,
@@ -57,7 +56,6 @@ export default function MainDashboard() {
       },
     ],
   });
-  const navigate = useNavigate();
 
   const getDateRange = (period) => {
     const today = new Date();
