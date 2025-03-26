@@ -204,6 +204,10 @@ export default function CreateOrder() {
     }
   };
 
+  useEffect(() => {
+    loadActiveOrders();
+  }, []);
+
   return (
     <div className="create-order-layout d-flex" style={{ minHeight: "100vh" }}>
       <Sidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
