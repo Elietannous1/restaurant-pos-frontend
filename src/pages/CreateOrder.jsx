@@ -82,15 +82,13 @@ export default function CreateOrder() {
   useEffect(() => {
     async function enrichActiveOrders() {
       try {
-        // Check if there is at least one order and one order item,
-        // and if the first order item does not have a productName property.
         if (
           activeOrders.length > 0 &&
           activeOrders[0].orderItems &&
           activeOrders[0].orderItems.length > 0 &&
           !("productName" in activeOrders[0].orderItems[0])
         ) {
-          const productMapping = await fetchProductNames(); // returns mapping: { id: { productName, price, ... } }
+          const productMapping = await fetchProductNames(); // mapping: { id: { productName, price, ... } }
           const enriched = activeOrders.map((order) => ({
             ...order,
             orderItems: order.orderItems.map((item) => ({
@@ -172,11 +170,15 @@ export default function CreateOrder() {
     setCustomerName("");
   };
 
+  // Delete an order from local orders (Order Details container)
+  const deleteOrder = (orderIndex) => {
+    setOrders((prev) => prev.filter((_, idx) => idx !== orderIndex));
+  };
+
   // Finalize orders: send them to backend and reload active orders
   const finalizeOrders = async () => {
     if (orders.length === 0) return;
     try {
-      // Send orders one-by-one; exclude customerName from payload if backend doesn't accept it
       await Promise.all(
         orders.map((order) => {
           const { customerName, ...payload } = order;
@@ -370,6 +372,15 @@ export default function CreateOrder() {
                           Total: ${calculateTotalCost(order.orderItems)}
                         </div>
                         <div>Status: {order.orderStatus}</div>
+                        {/* Delete button to remove order */}
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={() => deleteOrder(index)}
+                          style={{ marginTop: "0.5rem" }}
+                        >
+                          Delete Order
+                        </Button>
                       </ListGroup.Item>
                     ))}
                   </ListGroup>
