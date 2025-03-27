@@ -22,8 +22,12 @@ export default function Sidebar() {
         >
           Create Order
         </Button>
-        <Button variant="primary" className="sidebar-btn">
-          Reports
+        <Button
+          variant="primary"
+          className="sidebar-btn"
+          onClick={() => navigate("/ViewOrders")}
+        >
+          View Orders
         </Button>
         <Button variant="primary" className="sidebar-btn">
           Settings
