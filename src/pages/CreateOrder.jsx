@@ -196,6 +196,7 @@ export default function CreateOrder() {
   // Update status for an active order
   const handleActiveOrderStatusChange = async (orderId, newStatus) => {
     try {
+      console.log(`Updating order ${orderId} status to ${newStatus}`);
       await updateOrderStatus(orderId, newStatus);
       console.log(`Order ${orderId} status updated to ${newStatus}`);
       await loadActiveOrders();
@@ -410,12 +411,12 @@ export default function CreateOrder() {
                 {activeOrders.length ? (
                   <ListGroup variant="flush">
                     {activeOrders.map((order) => (
-                      <ListGroup.Item key={order.id}>
+                      <ListGroup.Item key={order.orderId}>
                         <div>
                           <strong>
                             {order.customerName
                               ? `Order for ${order.customerName}`
-                              : `Order #${order.id}`}
+                              : `Order #${order.orderId}`}
                           </strong>
                         </div>
                         <div>
@@ -434,7 +435,7 @@ export default function CreateOrder() {
                         <div>Total: ${order.totalPrice}</div>
                         <div>Status: {order.orderStatus}</div>
                         <Form.Group
-                          controlId={`status-${order.id}`}
+                          controlId={`status-${order.orderId}`}
                           className="mt-2"
                         >
                           <Form.Label>Update Status</Form.Label>
@@ -442,7 +443,7 @@ export default function CreateOrder() {
                             value={order.orderStatus}
                             onChange={(e) =>
                               handleActiveOrderStatusChange(
-                                order.id,
+                                order.orderId,
                                 e.target.value
                               )
                             }

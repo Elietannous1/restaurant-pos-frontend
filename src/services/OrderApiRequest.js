@@ -58,8 +58,8 @@ export const updateOrderStatus = async (orderId, newStatus) => {
   try {
     const token = getToken();
     const response = await axios.put(
-      `${BaseURL}/order/update/status/${orderId}`,
-      { status: newStatus },
+      `${BaseURL}/order/update/status?id=${orderId}`,
+      { orderStatus: newStatus },
       {
         headers: {
           Authorization: `Bearer ${token}`,
