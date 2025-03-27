@@ -1,0 +1,26 @@
+.view-orders-container {
+  max-width: 1200px;
+  /* Container will be centered by the parent flex container */
+  padding: 20px;
+  background: linear-gradient(135deg, #f0f4f8, #e0e7ff);
+  border-radius: 8px;
+}
+
+.view-orders-title {
+  margin-bottom: 20px;
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #4f46e5;
+  text-align: center;
+}
+
+/* Optional additional styling for cards and tables */
+.card {
+  border: none;
+  margin-bottom: 1rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.table {
+  margin-bottom: 0;
+}
