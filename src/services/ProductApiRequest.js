@@ -35,3 +35,37 @@ export const fetchProductNames = async () => {
     throw error.response?.data || "Failed to fetch product names";
   }
 };
+
+export const fetchProducts = async () => {
+  try {
+    const token = getToken();
+    const response = await axios.get(`${BaseURL}/product`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    throw error.response?.data || "Failed to fetch products";
+  }
+};
+
+export const createProduct = async (productData) => {
+  try {
+    const token = getToken();
+    const response = await axios.post(
+      `${BaseURL}/product/add`,
+      { productData },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error creating product:", error);
+    throw error.response?.data || "Failed to create product";
+  }
+};

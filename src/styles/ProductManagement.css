@@ -1,0 +1,30 @@
+.products-management-container {
+  width: 100%;
+  max-width: 1200px; /* Adjust as needed */
+  margin: 0 auto; /* Center the container */
+  padding: 20px;
+  background: linear-gradient(135deg, #f0f4f8, #e0e7ff);
+  border-radius: 8px;
+}
+
+.main-content {
+  width: 1280px;
+}
+
+h2 {
+  color: #4f46e5;
+}
+
+.products-table {
+  font-size: 1rem;
+}
+
+.card {
+  border: none;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.form-label {
+  font-weight: bold;
+  color: #333;
+}
