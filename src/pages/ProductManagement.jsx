@@ -13,6 +13,7 @@ import { useSidebar } from "../context/SideBarContext";
 import {
   fetchProducts,
   createProduct,
+  updateProduct,
   deleteProduct,
 } from "../services/ProductApiRequest";
 import { getCategories } from "../services/CategoryApiRequest";
@@ -21,12 +22,16 @@ import "../styles/ProductManagement.css";
 export default function ProductsManagement() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
-  // Form fields for creating a product
+  // Form fields for product creation/updating
   const [productName, setProductName] = useState("");
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
   const [isAvailable, setIsAvailable] = useState(true);
   const [categoryId, setCategoryId] = useState("");
+
+  // Editing state
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingProductId, setEditingProductId] = useState(null);
 
   const { sidebarOpen, toggleSidebar } = useSidebar();
 
@@ -56,25 +61,33 @@ export default function ProductsManagement() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const newProduct = {
+      const productData = {
         productName,
         price: parseFloat(price),
         description,
-        isAvailable, // using isAvailable as expected by the backend DTO
+        isAvailable, // send as expected by the backend DTO
         categoryId,
       };
-      await createProduct(newProduct);
-      // Refresh products list after creation
+
+      if (isEditing) {
+        // Call update API if in editing mode
+        await updateProduct(editingProductId, productData);
+      } else {
+        await createProduct(productData);
+      }
+      // Refresh products list after creation/update
       const productsData = await fetchProducts();
       setProducts(productsData);
-      // Clear the form
+      // Clear the form and editing state
       setProductName("");
       setPrice("");
       setDescription("");
       setIsAvailable(true);
       if (categories.length > 0) setCategoryId(categories[0].categoryId);
+      setIsEditing(false);
+      setEditingProductId(null);
     } catch (error) {
-      console.error("Error creating product:", error);
+      console.error("Error saving product:", error);
     }
   };
 
@@ -87,6 +100,20 @@ export default function ProductsManagement() {
     } catch (error) {
       console.error("Error deleting product:", error);
     }
+  };
+
+  const handleEdit = (product) => {
+    // Pre-fill the form with the product's details
+    setProductName(product.productName);
+    setPrice(product.price);
+    setDescription(product.description);
+    setIsAvailable(product.isAvailable);
+    setCategoryId(
+      product.categoryId ||
+        (categories.length > 0 ? categories[0].categoryId : "")
+    );
+    setIsEditing(true);
+    setEditingProductId(product.id);
   };
 
   return (
@@ -132,6 +159,14 @@ export default function ProductsManagement() {
                             <td>{product.categoryName || "-"}</td>
                             <td>
                               <Button
+                                variant="warning"
+                                size="sm"
+                                onClick={() => handleEdit(product)}
+                                className="me-1"
+                              >
+                                Edit
+                              </Button>
+                              <Button
                                 variant="danger"
                                 size="sm"
                                 onClick={() => handleDelete(product.id)}
@@ -154,7 +189,9 @@ export default function ProductsManagement() {
               </Card>
             </Col>
             <Col md={5}>
-              <h2 className="mb-4 text-center">Create New Product</h2>
+              <h2 className="mb-4 text-center">
+                {isEditing ? "Edit Product" : "Create New Product"}
+              </h2>
               <Card className="shadow">
                 <Card.Body>
                   <Form onSubmit={handleSubmit}>
@@ -211,7 +248,7 @@ export default function ProductsManagement() {
                       </Form.Select>
                     </Form.Group>
                     <Button variant="primary" type="submit">
-                      Create Product
+                      {isEditing ? "Update Product" : "Create Product"}
                     </Button>
                   </Form>
                 </Card.Body>

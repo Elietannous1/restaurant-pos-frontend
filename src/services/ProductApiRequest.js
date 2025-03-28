@@ -84,3 +84,22 @@ export const deleteProduct = async (productId) => {
     throw error.response?.data || "Failed to delete product";
   }
 };
+
+export const updateProduct = async (productId, productData) => {
+  try {
+    const token = getToken();
+    const response = await axios.put(
+      `${BaseURL}/product/update?id=${productId}`,
+      productData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error updating product:", error);
+    throw error.response?.data || "Failed to update product";
+  }
+};
