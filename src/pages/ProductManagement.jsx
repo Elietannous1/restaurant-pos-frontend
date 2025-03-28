@@ -10,7 +10,11 @@ import {
 } from "react-bootstrap";
 import Sidebar from "../components/Sidebar";
 import { useSidebar } from "../context/SideBarContext";
-import { fetchProducts, createProduct } from "../services/ProductApiRequest";
+import {
+  fetchProducts,
+  createProduct,
+  deleteProduct,
+} from "../services/ProductApiRequest";
 import { getCategories } from "../services/CategoryApiRequest";
 import "../styles/ProductManagement.css";
 
@@ -56,10 +60,9 @@ export default function ProductsManagement() {
         productName,
         price: parseFloat(price),
         description,
-        isAvailable: isAvailable,
+        isAvailable, // using isAvailable as expected by the backend DTO
         categoryId,
       };
-      console.log("Creating product:", newProduct);
       await createProduct(newProduct);
       // Refresh products list after creation
       const productsData = await fetchProducts();
@@ -75,6 +78,17 @@ export default function ProductsManagement() {
     }
   };
 
+  const handleDelete = async (productId) => {
+    try {
+      await deleteProduct(productId);
+      // Refresh products list after deletion
+      const productsData = await fetchProducts();
+      setProducts(productsData);
+    } catch (error) {
+      console.error("Error deleting product:", error);
+    }
+  };
+
   return (
     <div
       className="products-management-layout d-flex"
@@ -84,7 +98,7 @@ export default function ProductsManagement() {
       <div className="main-content flex-grow-1 p-4">
         <Container className="products-management-container">
           <Row>
-            <Col md={6}>
+            <Col md={7}>
               <h2 className="mb-4 text-center">Available Products</h2>
               <Card className="shadow mb-4">
                 <Card.Body>
@@ -103,6 +117,7 @@ export default function ProductsManagement() {
                         <th>Description</th>
                         <th>Available</th>
                         <th>Category</th>
+                        <th>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -115,11 +130,20 @@ export default function ProductsManagement() {
                             <td>{product.description}</td>
                             <td>{product.isAvailable ? "Yes" : "No"}</td>
                             <td>{product.categoryName || "-"}</td>
+                            <td>
+                              <Button
+                                variant="danger"
+                                size="sm"
+                                onClick={() => handleDelete(product.id)}
+                              >
+                                Remove
+                              </Button>
+                            </td>
                           </tr>
                         ))
                       ) : (
                         <tr>
-                          <td colSpan="6" className="text-center">
+                          <td colSpan="7" className="text-center">
                             No products found.
                           </td>
                         </tr>
@@ -129,7 +153,7 @@ export default function ProductsManagement() {
                 </Card.Body>
               </Card>
             </Col>
-            <Col md={6}>
+            <Col md={5}>
               <h2 className="mb-4 text-center">Create New Product</h2>
               <Card className="shadow">
                 <Card.Body>

@@ -54,9 +54,24 @@ export const fetchProducts = async () => {
 export const createProduct = async (productData) => {
   try {
     const token = getToken();
+    const response = await axios.post(`${BaseURL}/product/add`, productData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error creating product:", error);
+    throw error.response?.data || "Failed to create product";
+  }
+};
+
+export const deleteProduct = async (productId) => {
+  try {
+    const token = getToken();
     const response = await axios.post(
-      `${BaseURL}/product/add`,
-      { productData },
+      `${BaseURL}/product/remove?id=${productId}`,
+      null, // No data to send
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -65,7 +80,7 @@ export const createProduct = async (productData) => {
     );
     return response.data;
   } catch (error) {
-    console.error("Error creating product:", error);
-    throw error.response?.data || "Failed to create product";
+    console.error("Error deleting product:", error);
+    throw error.response?.data || "Failed to delete product";
   }
 };
