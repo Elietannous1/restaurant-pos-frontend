@@ -36,6 +36,13 @@ export default function Sidebar() {
         >
           Product Management
         </Button>
+        <Button
+          variant="primary"
+          className="sidebar-btn"
+          onClick={() => navigate("/CategoryManagement")}
+        >
+          Category Management
+        </Button>
       </nav>
     </div>
   );
