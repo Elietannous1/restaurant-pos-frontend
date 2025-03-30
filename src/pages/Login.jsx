@@ -79,6 +79,9 @@ export default function Login() {
                 </Link>
               </p>
             </Form>
+            <div className="text-center mt-3">
+              <a href="/account-recovery">Forgot Password?</a>
+            </div>
           </Card.Body>
         </Card>
       </Container>
