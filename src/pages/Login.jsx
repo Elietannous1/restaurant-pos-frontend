@@ -80,7 +80,7 @@ export default function Login() {
               </p>
             </Form>
             <div className="text-center mt-3">
-              <a href="/account-recovery">Forgot Password?</a>
+              <a href="/recovery/RequestRecovery">Forgot Password?</a>
             </div>
           </Card.Body>
         </Card>
