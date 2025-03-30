@@ -60,3 +60,27 @@ export const getProductsByCategory = async (id) => {
     throw error.response?.data || "Failed to fetch products by category";
   }
 };
+
+export const createCategory = async (categoryData) => {
+  try {
+    const token = getToken();
+    const response = await axios.post(
+      `${BaseURL}/category/create`,
+      categoryData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!response.data || typeof response.data !== "object") {
+      throw new Error("Invalid category data format received");
+    }
+
+    return response.data; // Returns the created category object
+  } catch (error) {
+    console.error("Error creating category:", error);
+    throw error.response?.data || "Failed to create category";
+  }
+};
