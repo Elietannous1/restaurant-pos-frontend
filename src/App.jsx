@@ -8,7 +8,7 @@ import CategoryManagement from "./pages/CategoryManagement";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { Routes, Route } from "react-router-dom";
 import { SidebarProvider } from "./context/SideBarContext";
-import RequestRecovery from "./pages/recovery/RequestRecovery";
+import AccountRecovery from "./pages/recovery/AccountRecovery";
 
 function App() {
   return (
@@ -21,7 +21,7 @@ function App() {
         <Route path="/ViewOrders" element={<ViewOrders />} />
         <Route path="/ProductManagement" element={<ProductManagement />} />
         <Route path="/CategoryManagement" element={<CategoryManagement />} />
-        <Route path="/recovery/RequestRecovery" element={<RequestRecovery />} />
+        <Route path="/recovery/AccountRecovery" element={<AccountRecovery />} />
       </Routes>
     </SidebarProvider>
   );
