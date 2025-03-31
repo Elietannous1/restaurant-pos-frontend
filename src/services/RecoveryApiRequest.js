@@ -25,3 +25,16 @@ export const verifyRecoveryCode = async (email, code) => {
     throw error.response?.data || "Failed to verify recovery code";
   }
 };
+
+export const resetPassword = async (email, code, newPassword) => {
+  try {
+    const response = await axios.post(`${BaseURL}/account/reset`, {
+      email,
+      newPassword,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error resetting password:", error);
+    throw error.response?.data || "Failed to reset password";
+  }
+};
