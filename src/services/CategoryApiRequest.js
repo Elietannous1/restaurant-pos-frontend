@@ -84,3 +84,24 @@ export const createCategory = async (categoryData) => {
     throw error.response?.data || "Failed to create category";
   }
 };
+
+export const deleteCategory = async (categoryId) => {
+  try {
+    const token = getToken();
+    const response = await axios.post(
+      `${BaseURL}/category/delete/?id=${categoryId}`,
+      null, // no request body
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    // Remove the type check because the backend returns a string
+    return response.data;
+  } catch (error) {
+    console.error(`Error deleting category ${categoryId}:`, error);
+    throw error.response?.data || "Failed to delete category";
+  }
+};

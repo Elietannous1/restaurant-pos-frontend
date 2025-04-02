@@ -10,7 +10,12 @@ import {
 } from "react-bootstrap";
 import Sidebar from "../components/Sidebar";
 import { useSidebar } from "../context/SideBarContext";
-import { getCategories, createCategory } from "../services/CategoryApiRequest";
+import {
+  getCategories,
+  createCategory,
+  deleteCategory, // Import the delete function
+} from "../services/CategoryApiRequest";
+import "../styles/ProductManagement.css";
 
 export default function CategoryManagement() {
   const [categories, setCategories] = useState([]);
@@ -47,6 +52,18 @@ export default function CategoryManagement() {
     }
   };
 
+  // Handler for deleting a category
+  const handleDelete = async (categoryId) => {
+    try {
+      await deleteCategory(categoryId);
+      // Refresh the categories list after deletion
+      const data = await getCategories();
+      setCategories(data);
+    } catch (error) {
+      console.error("Error deleting category:", error);
+    }
+  };
+
   return (
     <div
       className="category-management-layout d-flex"
@@ -72,6 +89,7 @@ export default function CategoryManagement() {
                         <th>ID</th>
                         <th>Category Name</th>
                         <th>Description</th>
+                        <th>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -81,11 +99,20 @@ export default function CategoryManagement() {
                             <td>{cat.categoryId}</td>
                             <td>{cat.categoryName}</td>
                             <td>{cat.description}</td>
+                            <td>
+                              <Button
+                                variant="danger"
+                                size="sm"
+                                onClick={() => handleDelete(cat.categoryId)}
+                              >
+                                Delete
+                              </Button>
+                            </td>
                           </tr>
                         ))
                       ) : (
                         <tr>
-                          <td colSpan="3" className="text-center">
+                          <td colSpan="4" className="text-center">
                             No categories found.
                           </td>
                         </tr>
