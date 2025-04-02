@@ -28,7 +28,7 @@ export default function VerifyRecoveryCode({ email, onVerified }) {
         onVerified();
       } else {
         // Optionally navigate to the next step, e.g., password reset
-        navigate("/recovery/reset");
+        navigate("/ResetPassword", { state: { email } });
       }
     } catch (err) {
       setError("Verification failed. Please check your code and try again.");

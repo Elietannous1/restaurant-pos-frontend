@@ -3,7 +3,7 @@ import { Container, Card, Form, Button, Alert } from "react-bootstrap";
 import { resetPassword } from "../../services/RecoveryApiRequest"; // adjust path if needed
 import { useNavigate } from "react-router-dom";
 
-export default function ResetPassword() {
+export default function ResetPassword({ email }) {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
@@ -22,11 +22,11 @@ export default function ResetPassword() {
 
     try {
       // Call the API to reset the password
-      await resetPassword(newPassword);
+      await resetPassword(email, newPassword);
       setMessage("Password reset successfully!");
       // Optionally, navigate to the login page after a short delay
       setTimeout(() => {
-        navigate("/login");
+        navigate("/");
       }, 2000);
     } catch (err) {
       setError("Failed to reset password. Please try again.");

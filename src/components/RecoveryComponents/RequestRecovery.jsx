@@ -1,13 +1,11 @@
 import React, { useState } from "react";
-import { Card, Form, Button, Alert } from "react-bootstrap";
+import { Container, Card, Form, Button, Alert } from "react-bootstrap";
 import { requestRecoveryEmail } from "../../services/RecoveryApiRequest";
-import { useNavigate } from "react-router-dom";
 
-export default function RequestRecovery() {
+export default function RequestRecovery({ onSuccess }) {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
-  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -16,6 +14,7 @@ export default function RequestRecovery() {
     try {
       await requestRecoveryEmail(email);
       setMessage("A verification code has been sent to your email.");
+      onSuccess(email);
       // Optionally, navigate to the verification page:
       // navigate("/recovery/verify");
     } catch (err) {
@@ -24,20 +23,15 @@ export default function RequestRecovery() {
   };
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-        width: "600px",
-        padding: "20px",
-        background: "#f8f9fa",
-        borderRadius: "8px",
-        boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
-      }}
+    <Container
+      fluid
+      className="d-flex justify-content-center align-items-center bg-light"
+      style={{ minHeight: "100vh" }}
     >
-      <Card className="shadow rounded">
+      <Card
+        className="shadow rounded"
+        style={{ maxWidth: "500px", width: "100%" }}
+      >
         <Card.Body>
           <h1 className="text-center mb-4">Account Recovery</h1>
           <p className="text-center">
@@ -62,6 +56,6 @@ export default function RequestRecovery() {
           </Form>
         </Card.Body>
       </Card>
-    </div>
+    </Container>
   );
 }

@@ -12,13 +12,13 @@ export const requestRecoveryEmail = async (email) => {
     throw error.response?.data || "Failed to send recovery email";
   }
 };
-
 export const verifyRecoveryCode = async (email, code) => {
   try {
-    const response = await axios.post(`${BaseURL}/account/verify`, {
-      email,
-      params: { code },
-    });
+    const response = await axios.post(
+      `${BaseURL}/account/verify`,
+      { email }, // Request body
+      { params: { code } } // Query parameters
+    );
     return response.data;
   } catch (error) {
     console.error("Error verifying recovery code:", error);
@@ -26,11 +26,17 @@ export const verifyRecoveryCode = async (email, code) => {
   }
 };
 
-export const resetPassword = async (email, code, newPassword) => {
+export const resetPassword = async (email, password) => {
   try {
+    console.log(
+      "Resetting password for email:",
+      email,
+      "new password: ",
+      password
+    );
     const response = await axios.post(`${BaseURL}/account/reset`, {
       email,
-      newPassword,
+      password,
     });
     return response.data;
   } catch (error) {
