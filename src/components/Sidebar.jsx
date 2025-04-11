@@ -18,6 +18,13 @@ export default function Sidebar() {
         <Button
           variant="primary"
           className="sidebar-btn"
+          onClick={() => navigate("/MainDashboard")}
+        >
+          Dashboard
+        </Button>
+        <Button
+          variant="primary"
+          className="sidebar-btn"
           onClick={() => navigate("/CreateOrder")}
         >
           Create Order
