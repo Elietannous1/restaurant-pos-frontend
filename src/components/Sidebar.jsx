@@ -50,6 +50,12 @@ export default function Sidebar() {
         >
           Category Management
         </Button>
+        <Button
+          onClick={() => navigate("/")}
+          style={{ backgroundColor: "red" }}
+        >
+          Logout
+        </Button>
       </nav>
     </div>
   );
