@@ -4,11 +4,16 @@ import { Button } from "react-bootstrap";
 import { FaBars } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useSidebar } from "../context/SideBarContext";
+import { clearToken } from "../utils/storage";
 import "../styles/sidebar.css";
 export default function Sidebar() {
   const { sidebarOpen, toggleSidebar } = useSidebar();
   const navigate = useNavigate();
 
+  const handleLogout = () => {
+    clearToken();
+    navigate("/");
+  };
   return (
     <div className={`sidebar ${sidebarOpen ? "open" : "closed"}`}>
       <button className="menu-btn" onClick={toggleSidebar}>
@@ -50,10 +55,7 @@ export default function Sidebar() {
         >
           Category Management
         </Button>
-        <Button
-          onClick={() => navigate("/")}
-          style={{ backgroundColor: "red" }}
-        >
+        <Button onClick={handleLogout} style={{ backgroundColor: "red" }}>
           Logout
         </Button>
       </nav>
