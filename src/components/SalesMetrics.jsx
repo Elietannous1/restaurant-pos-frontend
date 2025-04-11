@@ -13,7 +13,6 @@ const SalesMetrics = () => {
   useEffect(() => {
     const fetchMetrics = async () => {
       try {
-        // These functions should be implemented in your DashboardApiRequest service.
         const total = await getTotalSalesLast30Days();
         const today = await getTodaysSales();
         setTotalSales(total);
@@ -31,7 +30,15 @@ const SalesMetrics = () => {
         <Card className="text-center shadow">
           <Card.Body>
             <Card.Title>Total Sales (30 Days)</Card.Title>
-            <Card.Text style={{ fontSize: "2rem", fontWeight: "bold" }}>
+            <Card.Text
+              style={{
+                fontSize: "2rem",
+                fontWeight: "bold",
+                whiteSpace: "nowrap", // Prevent wrapping
+                paddingLeft: "15px", // Added left padding
+                paddingRight: "25px", // Added right padding
+              }}
+            >
               LL{totalSales.toFixed(2)}
             </Card.Text>
           </Card.Body>
@@ -41,7 +48,15 @@ const SalesMetrics = () => {
         <Card className="text-center shadow">
           <Card.Body>
             <Card.Title>Today's Sales</Card.Title>
-            <Card.Text style={{ fontSize: "2rem", fontWeight: "bold" }}>
+            <Card.Text
+              style={{
+                fontSize: "2rem",
+                fontWeight: "bold",
+                whiteSpace: "nowrap",
+                paddingLeft: "15px",
+                paddingRight: "15px",
+              }}
+            >
               LL{todaysSales.toFixed(2)}
             </Card.Text>
           </Card.Body>
