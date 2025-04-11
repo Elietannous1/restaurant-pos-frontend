@@ -81,3 +81,65 @@ export const getLineChartData = async (startDate, endDate) => {
     throw error.response?.data || "Failed to fetch sales data";
   }
 };
+
+export const getTodaysSales = async () => {
+  try {
+    const today = new Date().toISOString().split("T")[0]; // Format: YYYY-MM-DD
+    const response = await axios.get(`${BaseURL}/order/income`, {
+      headers: {
+        Authorization: `Bearer ${getToken()}`,
+      },
+      params: { date: today, period: "day" },
+    });
+    // Parse the response data which should be a string representing a number
+    const sales = parseFloat(response.data);
+    if (isNaN(sales)) {
+      console.warn(
+        "Parsed today's sales is NaN. Response data was:",
+        response.data
+      );
+    }
+    return sales;
+  } catch (error) {
+    console.error("Error fetching today's sales:", error);
+    throw error.response?.data || "Failed to fetch today's sales";
+  }
+};
+
+export const getTotalSalesLast30Days = async () => {
+  try {
+    const today = new Date();
+    // Create an array of promises for the last 30 days (using period "day")
+    const salesPromises = [];
+    for (let i = 0; i < 30; i++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() - i);
+      const formattedDate = date.toISOString().split("T")[0];
+      salesPromises.push(
+        axios.get(`${BaseURL}/order/income`, {
+          headers: {
+            Authorization: `Bearer ${getToken()}`,
+          },
+          params: { date: formattedDate, period: "day" },
+        })
+      );
+    }
+    // Wait for all API calls to resolve
+    const responses = await Promise.all(salesPromises);
+    // Sum the sales, parsing each response data into a float
+    const totalSales = responses.reduce((sum, res) => {
+      const dailySale = parseFloat(res.data);
+      if (isNaN(dailySale)) {
+        console.warn("Parsed daily sale is NaN. Response data was:", res.data);
+        return sum;
+      }
+      return sum + dailySale;
+    }, 0);
+    return totalSales;
+  } catch (error) {
+    console.error("Error fetching total sales for last 30 days:", error);
+    throw (
+      error.response?.data || "Failed to fetch total sales for last 30 days"
+    );
+  }
+};
