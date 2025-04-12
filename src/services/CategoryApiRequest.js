@@ -1,7 +1,5 @@
 // src/services/CategoryApiRequest.js
-import axios from "axios";
-import BaseURL from "../config/BaseURL";
-import { getToken } from "../utils/storage";
+import api from "./MainApi"; // Import our custom API instance
 
 /**
  * Fetches all categories from the backend.
@@ -9,17 +7,10 @@ import { getToken } from "../utils/storage";
  */
 export const getCategories = async () => {
   try {
-    const token = getToken();
-    const response = await axios.get(`${BaseURL}/category`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
+    const response = await api.get("/category");
     if (!response.data || !Array.isArray(response.data)) {
       throw new Error("Invalid categories data format received");
     }
-
     return response.data; // Returns an array of categories
   } catch (error) {
     console.error("Error fetching categories:", error);
@@ -34,11 +25,7 @@ export const getCategories = async () => {
  */
 export const getProductsByCategory = async (id) => {
   try {
-    const token = getToken();
-    const response = await axios.get(`${BaseURL}/category/products/`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    const response = await api.get("/category/products/", {
       params: { id },
     });
 
@@ -61,23 +48,16 @@ export const getProductsByCategory = async (id) => {
   }
 };
 
+/**
+ * Creates a new category.
+ * Expects an object with category details.
+ */
 export const createCategory = async (categoryData) => {
   try {
-    const token = getToken();
-    const response = await axios.post(
-      `${BaseURL}/category/create`,
-      categoryData,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
+    const response = await api.post("/category/create", categoryData);
     if (!response.data || typeof response.data !== "object") {
       throw new Error("Invalid category data format received");
     }
-
     return response.data; // Returns the created category object
   } catch (error) {
     console.error("Error creating category:", error);
@@ -85,20 +65,13 @@ export const createCategory = async (categoryData) => {
   }
 };
 
+/**
+ * Deletes a category.
+ * Expects a successful deletion message or the deleted category object.
+ */
 export const deleteCategory = async (categoryId) => {
   try {
-    const token = getToken();
-    const response = await axios.post(
-      `${BaseURL}/category/delete/?id=${categoryId}`,
-      null, // no request body
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    // Remove the type check because the backend returns a string
+    const response = await api.post(`/category/delete/?id=${categoryId}`, null);
     return response.data;
   } catch (error) {
     console.error(`Error deleting category ${categoryId}:`, error);

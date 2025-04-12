@@ -1,7 +1,5 @@
 // src/services/OrderApiRequest.js
-import axios from "axios";
-import BaseURL from "../config/BaseURL";
-import { getToken } from "../utils/storage";
+import api from "./MainApi"; // Import the custom API instance
 
 /**
  * 1. Create an Order
@@ -10,13 +8,9 @@ import { getToken } from "../utils/storage";
  */
 export const createOrder = async (orderData) => {
   try {
-    const token = getToken();
     console.log("orderData", orderData);
-    const response = await axios.post(`${BaseURL}/order/create`, orderData, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    // Use the custom API instance; the token is attached automatically via the interceptor.
+    const response = await api.post("/order/create", orderData);
     return response.data;
   } catch (error) {
     console.error("Error creating order:", error);
@@ -31,17 +25,11 @@ export const createOrder = async (orderData) => {
  */
 export const fetchAllOrders = async () => {
   try {
-    const token = getToken();
-    const response = await axios.get(`${BaseURL}/order`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
+    // The custom API instance will set the Authorization header automatically
+    const response = await api.get("/order");
     if (!response.data || !Array.isArray(response.data)) {
       throw new Error("Invalid orders data format received");
     }
-
     return response.data;
   } catch (error) {
     console.error("Error fetching orders:", error);
@@ -51,21 +39,14 @@ export const fetchAllOrders = async () => {
 
 /**
  * 3. Update Order Status
- *    Endpoint: PUT /order/update/status/:id
+ *    Endpoint: PUT /order/update/status?id={orderId}
  *    Pass the orderId in the URL, and the new status in the request body
  */
 export const updateOrderStatus = async (orderId, newStatus) => {
   try {
-    const token = getToken();
-    const response = await axios.put(
-      `${BaseURL}/order/update/status?id=${orderId}`,
-      { orderStatus: newStatus },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+    const response = await api.put(`/order/update/status?id=${orderId}`, {
+      orderStatus: newStatus,
+    });
     return response.data;
   } catch (error) {
     console.error(`Error updating order ${orderId} status:`, error);

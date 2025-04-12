@@ -1,57 +1,41 @@
-import axios from "axios";
-import BaseURL from "../config/BaseURL";
-import { getToken } from "../utils/storage";
+// src/services/DashboardApiRequest.js
+import api from "./MainApi"; // Use the custom API instance
 
 export const getBarChartData = async (startDate, endDate, productNames) => {
   try {
-    const token = getToken();
-    console.log("Auth token: ", token);
-
-    // Fetch data from the backend
-    const response = await axios.get(`${BaseURL}/sales/top-selling`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      params: { startDate, endDate }, // Send calculated dates in request
+    // The interceptor in "api" will attach the Authorization header automatically.
+    const response = await api.get("/sales/top-selling", {
+      params: { startDate, endDate },
     });
 
-    // Check if the response data is valid
     if (!response.data || !Array.isArray(response.data)) {
       throw new Error("Invalid data format received");
     }
 
-    // Group sales by product ID and sum the quantitySold for each product
+    // Group sales by product and sum their quantitySold
     const aggregatedSales = response.data.reduce((acc, item) => {
-      // If the product already exists in the accumulator, add the quantitySold
       if (acc[item.product]) {
         acc[item.product].quantitySold += item.quantitySold;
       } else {
-        // If it's the first time the product is encountered, add it to the accumulator
         acc[item.product] = {
-          productName: productNames[item.product] || "Unknown", // Get product name
+          productName: productNames[item.product] || "Unknown",
           quantitySold: item.quantitySold,
         };
       }
       return acc;
     }, {});
 
-    // Convert the aggregated sales object back to an array of chart data
     const chartData = Object.values(aggregatedSales);
-
-    // Return the aggregated chart data
     return chartData;
   } catch (error) {
-    console.error("Error fetching dashboard data:", error);
-    throw error.response?.data || "Failed to fetch dashboard data";
+    console.error("Error fetching bar chart data:", error);
+    throw error.response?.data || "Failed to fetch bar chart data";
   }
 };
 
 export const getLineChartData = async (startDate, endDate) => {
   try {
-    const response = await axios.get(`${BaseURL}/sales/top-selling`, {
-      headers: {
-        Authorization: `Bearer ${getToken()}`,
-      },
+    const response = await api.get("/sales/top-selling", {
       params: { startDate, endDate },
     });
 
@@ -69,29 +53,25 @@ export const getLineChartData = async (startDate, endDate) => {
       return acc;
     }, {});
 
-    // Convert to array format suitable for Recharts
+    // Convert aggregated data into the format needed for the line chart
     const formattedData = Object.keys(salesByDate).map((date) => ({
       saleDate: date,
       totalSales: salesByDate[date],
     }));
 
-    return formattedData; // [{ saleDate: "2025-02-20", totalSales: 17 }]
+    return formattedData;
   } catch (error) {
     console.error("Error fetching line chart data:", error);
-    throw error.response?.data || "Failed to fetch sales data";
+    throw error.response?.data || "Failed to fetch line chart data";
   }
 };
 
 export const getTodaysSales = async () => {
   try {
-    const today = new Date().toISOString().split("T")[0]; // Format: YYYY-MM-DD
-    const response = await axios.get(`${BaseURL}/order/income`, {
-      headers: {
-        Authorization: `Bearer ${getToken()}`,
-      },
+    const today = new Date().toISOString().split("T")[0];
+    const response = await api.get("/order/income", {
       params: { date: today, period: "day" },
     });
-    // Parse the response data which should be a string representing a number
     const sales = parseFloat(response.data);
     if (isNaN(sales)) {
       console.warn(
@@ -109,24 +89,18 @@ export const getTodaysSales = async () => {
 export const getTotalSalesLast30Days = async () => {
   try {
     const today = new Date();
-    // Create an array of promises for the last 30 days (using period "day")
     const salesPromises = [];
     for (let i = 0; i < 30; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() - i);
       const formattedDate = date.toISOString().split("T")[0];
       salesPromises.push(
-        axios.get(`${BaseURL}/order/income`, {
-          headers: {
-            Authorization: `Bearer ${getToken()}`,
-          },
+        api.get("/order/income", {
           params: { date: formattedDate, period: "day" },
         })
       );
     }
-    // Wait for all API calls to resolve
     const responses = await Promise.all(salesPromises);
-    // Sum the sales, parsing each response data into a float
     const totalSales = responses.reduce((sum, res) => {
       const dailySale = parseFloat(res.data);
       if (isNaN(dailySale)) {

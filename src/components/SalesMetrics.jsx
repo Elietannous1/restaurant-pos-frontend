@@ -26,7 +26,7 @@ const SalesMetrics = () => {
 
   return (
     <Row className="mb-4">
-      <Col md={6}>
+      <Col md={8}>
         <Card className="text-center shadow">
           <Card.Body>
             <Card.Title>Total Sales (30 Days)</Card.Title>
@@ -44,7 +44,7 @@ const SalesMetrics = () => {
           </Card.Body>
         </Card>
       </Col>
-      <Col md={6}>
+      <Col md={8}>
         <Card className="text-center shadow">
           <Card.Body>
             <Card.Title>Today's Sales</Card.Title>
