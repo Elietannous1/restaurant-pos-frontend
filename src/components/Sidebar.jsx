@@ -1,11 +1,19 @@
-// src/components/Sidebar.js
-import React from "react";
+"use client";
 import { Button } from "react-bootstrap";
-import { FaBars } from "react-icons/fa";
+import {
+  FaBars,
+  FaChartBar,
+  FaShoppingCart,
+  FaListAlt,
+  FaBoxes,
+  FaTags,
+  FaSignOutAlt,
+} from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useSidebar } from "../context/SideBarContext";
 import { clearToken } from "../utils/storage";
 import "../styles/sidebar.css";
+
 export default function Sidebar() {
   const { sidebarOpen, toggleSidebar } = useSidebar();
   const navigate = useNavigate();
@@ -14,6 +22,7 @@ export default function Sidebar() {
     clearToken();
     navigate("/");
   };
+
   return (
     <div className={`sidebar ${sidebarOpen ? "open" : "closed"}`}>
       <button className="menu-btn" onClick={toggleSidebar}>
@@ -25,38 +34,56 @@ export default function Sidebar() {
           className="sidebar-btn"
           onClick={() => navigate("/MainDashboard")}
         >
-          Dashboard
+          <span className="icon">
+            <FaChartBar />
+          </span>
+          <span className="text">Dashboard</span>
         </Button>
         <Button
           variant="primary"
           className="sidebar-btn"
           onClick={() => navigate("/CreateOrder")}
         >
-          Create Order
+          <span className="icon">
+            <FaShoppingCart />
+          </span>
+          <span className="text">Create Order</span>
         </Button>
         <Button
           variant="primary"
           className="sidebar-btn"
           onClick={() => navigate("/ViewOrders")}
         >
-          View Orders
+          <span className="icon">
+            <FaListAlt />
+          </span>
+          <span className="text">View Orders</span>
         </Button>
         <Button
           variant="primary"
           className="sidebar-btn"
           onClick={() => navigate("/ProductManagement")}
         >
-          Product Management
+          <span className="icon">
+            <FaBoxes />
+          </span>
+          <span className="text">Product Management</span>
         </Button>
         <Button
           variant="primary"
           className="sidebar-btn"
           onClick={() => navigate("/CategoryManagement")}
         >
-          Category Management
+          <span className="icon">
+            <FaTags />
+          </span>
+          <span className="text">Category Management</span>
         </Button>
-        <Button onClick={handleLogout} style={{ backgroundColor: "red" }}>
-          Logout
+        <Button className="sidebar-btn logout-btn" onClick={handleLogout}>
+          <span className="icon">
+            <FaSignOutAlt />
+          </span>
+          <span className="text">Logout</span>
         </Button>
       </nav>
     </div>
