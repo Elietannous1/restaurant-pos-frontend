@@ -1,13 +1,13 @@
+// src/pages/ViewOrders.jsx
+
 import React, { useState, useEffect } from "react";
 import { fetchAllOrders } from "../services/OrderApiRequest";
-import { Container, Card, Table, Accordion } from "react-bootstrap";
+import { Accordion, Table } from "react-bootstrap";
 import Sidebar from "../components/Sidebar";
-import { useSidebar } from "../context/SideBarContext";
 import "../styles/viewOrders.css";
 
 export default function ViewOrders() {
   const [orders, setOrders] = useState([]);
-  const { sidebarOpen, toggleSidebar } = useSidebar();
 
   useEffect(() => {
     async function loadOrders() {
@@ -22,14 +22,15 @@ export default function ViewOrders() {
   }, []);
 
   return (
-    <div className="view-orders-layout d-flex" style={{ minHeight: "100vh" }}>
-      <Sidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
-      <div className="main-content flex-grow-1 p-4 d-flex justify-content-center">
-        <Container className="view-orders-container">
-          <h1 className="view-orders-title text-center">All Orders</h1>
+    <div className="view-orders-layout">
+      <Sidebar />
+      <div className="main-content">
+        <div className="view-orders-container">
+          <h1 className="view-orders-title">All Orders</h1>
+
           <Accordion defaultActiveKey="0">
-            {orders.map((order, index) => (
-              <Accordion.Item eventKey={String(index)} key={order.orderId}>
+            {orders.map((order, idx) => (
+              <Accordion.Item eventKey={String(idx)} key={order.orderId}>
                 <Accordion.Header>
                   <div className="d-flex justify-content-between align-items-center w-100">
                     <div>
@@ -42,6 +43,7 @@ export default function ViewOrders() {
                     </div>
                   </div>
                 </Accordion.Header>
+
                 <Accordion.Body>
                   <h5>Order Items</h5>
                   <Table striped bordered hover responsive>
@@ -55,7 +57,7 @@ export default function ViewOrders() {
                       </tr>
                     </thead>
                     <tbody>
-                      {order.orderItems && order.orderItems.length > 0 ? (
+                      {order.orderItems?.length ? (
                         order.orderItems.map((item) => (
                           <tr key={item.orderItemId}>
                             <td>{item.orderItemId}</td>
@@ -76,7 +78,7 @@ export default function ViewOrders() {
               </Accordion.Item>
             ))}
           </Accordion>
-        </Container>
+        </div>
       </div>
     </div>
   );

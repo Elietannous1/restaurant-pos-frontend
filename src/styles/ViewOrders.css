@@ -1,26 +1,54 @@
+/* src/styles/viewOrders.css */
+
+/* Make the overall layout a flex container */
+.view-orders-layout {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* Main content takes all available space */
+.main-content {
+  flex: 1;
+  padding: 2%; /* Changed from 20px to 2% */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Container fills the main content area */
 .view-orders-container {
-  max-width: 1200px;
-  /* Container will be centered by the parent flex container */
-  padding: 20px;
+  flex: 1;
+  width: 100%;
+  padding: 2%;
   background: linear-gradient(135deg, #f0f4f8, #e0e7ff);
-  border-radius: 8px;
+  border-radius: 1%; /* Changed from 8px to 1% */
+  box-sizing: border-box;
 }
 
 .view-orders-title {
-  margin-bottom: 20px;
-  font-size: 2.5rem;
+  margin-bottom: 2%;
+  font-size: 2.5rem; /* Keeping rem for font size as it's better for accessibility */
   font-weight: bold;
   color: #4f46e5;
   text-align: center;
 }
 
-/* Optional additional styling for cards and tables */
 .card {
   border: none;
-  margin-bottom: 1rem;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2%; /* Changed from 1rem to 2% */
+  box-shadow: 0 0.4% 1% rgba(0, 0, 0, 0.1); /* Changed from px to % */
 }
 
 .table {
   margin-bottom: 0;
+  width: 100%;
+}
+
+/* Make sure the accordion takes full width */
+.accordion {
+  width: 100%;
+}
+
+.accordion-item {
+  width: 100%;
 }
