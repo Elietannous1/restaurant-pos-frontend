@@ -1,18 +1,21 @@
-import React, { useState } from "react";
-import { Form, Button, Container, Card } from "react-bootstrap";
-import { Link, useNavigate } from "react-router-dom";
-import "../styles/Login.css";
-import { login } from "../services/LoginApiRequest";
+import React, { useState } from "react"; // React core and useState hook
+import { Form, Button, Container, Card } from "react-bootstrap"; // Bootstrap components
+import { Link, useNavigate } from "react-router-dom"; // Routing/navigation
+import "../styles/Login.css"; // Login-specific styles
+import { login } from "../services/LoginApiRequest"; // API call for authentication
 
 export default function Login() {
+  // formData holds email & password inputs
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
 
+  // error message state
   const [error, setError] = useState(null);
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // hook to programmatically navigate
 
+  // Update formData when user types
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -20,15 +23,16 @@ export default function Login() {
     });
   };
 
+  // Submit handler: attempt login, navigate on success, show error on failure
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
 
     try {
-      await login(formData.email, formData.password);
-      navigate("/MainDashboard");
+      await login(formData.email, formData.password); // call login API
+      navigate("/MainDashboard"); // go to dashboard on success
     } catch (e) {
-      setError(e.message || "Login failed");
+      setError(e.message || "Login failed"); // display error message
     }
   };
 
@@ -38,7 +42,16 @@ export default function Login() {
         <Card className="login-card p-4 shadow-lg">
           <Card.Body>
             <h2 className="text-center mb-4">Login</h2>
+
+            {/* Display error alert if login fails */}
+            {error && (
+              <div className="alert alert-danger" role="alert">
+                {error}
+              </div>
+            )}
+
             <Form onSubmit={handleSubmit}>
+              {/* Email input */}
               <Form.Group className="mb-4" controlId="formBasicEmail">
                 <Form.Label>Email address</Form.Label>
                 <Form.Control
@@ -48,12 +61,14 @@ export default function Login() {
                   value={formData.email}
                   onChange={handleChange}
                   className="form-control-lg"
+                  required // make input required
                 />
                 <Form.Text className="text-muted">
                   We'll never share your email with anyone else.
                 </Form.Text>
               </Form.Group>
 
+              {/* Password input */}
               <Form.Group className="mb-4" controlId="formBasicPassword">
                 <Form.Label>Password</Form.Label>
                 <Form.Control
@@ -63,15 +78,18 @@ export default function Login() {
                   value={formData.password}
                   onChange={handleChange}
                   className="form-control-lg"
+                  required // make input required
                 />
               </Form.Group>
 
+              {/* Submit button */}
               <div className="d-grid">
                 <Button variant="primary" type="submit" size="lg">
                   Sign In
                 </Button>
               </div>
 
+              {/* Link to registration */}
               <p className="text-center mt-2">
                 New here?{" "}
                 <Link to="/Register" className="text-primary">
@@ -79,8 +97,10 @@ export default function Login() {
                 </Link>
               </p>
             </Form>
+
+            {/* Forgot password link */}
             <div className="text-center mt-3">
-              <a href="/recovery/AccountRecovery">Forgot Password?</a>
+              <Link to="/recovery/AccountRecovery">Forgot Password?</Link>
             </div>
           </Card.Body>
         </Card>

@@ -13,17 +13,26 @@ import { useSidebar } from "../context/SideBarContext";
 import {
   getCategories,
   createCategory,
-  deleteCategory, // Import the delete function
+  deleteCategory, // Function to delete a category by ID
 } from "../services/CategoryApiRequest";
 import "../styles/ProductManagement.css";
 
+/**
+ * CategoryManagement component provides UI for listing,
+ * creating, and deleting product categories.
+ */
 export default function CategoryManagement() {
+  // State to hold list of categories fetched from API
   const [categories, setCategories] = useState([]);
+  // State to hold new category name input
   const [categoryName, setCategoryName] = useState("");
+  // State to hold new category description input
   const [description, setDescription] = useState("");
 
+  // Consume sidebar open state and toggle function from context
   const { sidebarOpen, toggleSidebar } = useSidebar();
 
+  // Fetch categories once on component mount
   useEffect(() => {
     async function loadCategories() {
       try {
@@ -34,17 +43,21 @@ export default function CategoryManagement() {
       }
     }
     loadCategories();
-  }, []);
+  }, []); // empty dependency array ensures this runs only once
 
+  /**
+   * Handle form submission to create a new category.
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const newCategory = { categoryName, description };
+      // Call API to create category
       await createCategory(newCategory);
-      // Refresh categories list after creation
+      // Refresh list after creation
       const data = await getCategories();
       setCategories(data);
-      // Clear the form
+      // Clear form inputs
       setCategoryName("");
       setDescription("");
     } catch (error) {
@@ -52,11 +65,14 @@ export default function CategoryManagement() {
     }
   };
 
-  // Handler for deleting a category
+  /**
+   * Handle deleting a category by its ID.
+   */
   const handleDelete = async (categoryId) => {
     try {
+      // Call API to delete
       await deleteCategory(categoryId);
-      // Refresh the categories list after deletion
+      // Refresh list after deletion
       const data = await getCategories();
       setCategories(data);
     } catch (error) {
@@ -69,10 +85,14 @@ export default function CategoryManagement() {
       className="category-management-layout d-flex"
       style={{ minHeight: "100vh" }}
     >
+      {/* Sidebar with collapse control */}
       <Sidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
+
+      {/* Main content area grows to fill space */}
       <div className="main-content flex-grow-1 p-4">
         <Container className="category-management-container">
           <Row>
+            {/* Left column: display existing categories */}
             <Col md={6}>
               <h2 className="mb-4 text-center">Available Categories</h2>
               <Card className="shadow mb-4">
@@ -93,6 +113,7 @@ export default function CategoryManagement() {
                       </tr>
                     </thead>
                     <tbody>
+                      {/* Render rows if categories exist */}
                       {categories && categories.length > 0 ? (
                         categories.map((cat) => (
                           <tr key={cat.categoryId}>
@@ -100,6 +121,7 @@ export default function CategoryManagement() {
                             <td>{cat.categoryName}</td>
                             <td>{cat.description}</td>
                             <td>
+                              {/* Delete button triggers handleDelete */}
                               <Button
                                 variant="danger"
                                 size="sm"
@@ -111,6 +133,7 @@ export default function CategoryManagement() {
                           </tr>
                         ))
                       ) : (
+                        // Show placeholder when no categories
                         <tr>
                           <td colSpan="4" className="text-center">
                             No categories found.
@@ -122,6 +145,8 @@ export default function CategoryManagement() {
                 </Card.Body>
               </Card>
             </Col>
+
+            {/* Right column: form to create a new category */}
             <Col md={6}>
               <h2 className="mb-4 text-center">Create New Category</h2>
               <Card className="shadow">
@@ -147,6 +172,7 @@ export default function CategoryManagement() {
                         onChange={(e) => setDescription(e.target.value)}
                       />
                     </Form.Group>
+                    {/* Submit button for form */}
                     <Button variant="primary" type="submit">
                       Create Category
                     </Button>

@@ -1,36 +1,44 @@
 // src/pages/ViewOrders.jsx
 
-import React, { useState, useEffect } from "react";
-import { fetchAllOrders } from "../services/OrderApiRequest";
-import { Accordion, Table } from "react-bootstrap";
-import Sidebar from "../components/Sidebar";
-import "../styles/viewOrders.css";
+import React, { useState, useEffect } from "react"; // React core + hooks for state and lifecycle
+import { fetchAllOrders } from "../services/OrderApiRequest"; // API call to retrieve all orders
+import { Accordion, Table } from "react-bootstrap"; // Bootstrap components for collapsible panels and tables
+import Sidebar from "../components/Sidebar"; // Sidebar navigation component
+import "../styles/viewOrders.css"; // CSS specific to the View Orders page
 
 export default function ViewOrders() {
+  // Local state to hold the list of orders fetched from the backend
   const [orders, setOrders] = useState([]);
 
+  // On component mount, load all orders
   useEffect(() => {
     async function loadOrders() {
       try {
-        const data = await fetchAllOrders();
-        setOrders(data);
+        const data = await fetchAllOrders(); // Fetch orders via API
+        setOrders(data); // Store them in state
       } catch (error) {
         console.error("Error fetching orders:", error);
       }
     }
     loadOrders();
-  }, []);
+  }, []); // Empty dependency array → run once on mount
 
   return (
     <div className="view-orders-layout">
+      {/* Sidebar for navigation */}
       <Sidebar />
+
+      {/* Main content area to the right of the sidebar */}
       <div className="main-content">
         <div className="view-orders-container">
+          {/* Page title */}
           <h1 className="view-orders-title">All Orders</h1>
 
+          {/* Accordion to show each order in a collapsible panel */}
           <Accordion defaultActiveKey="0">
             {orders.map((order, idx) => (
               <Accordion.Item eventKey={String(idx)} key={order.orderId}>
+                {/* Header shows order ID, status, total, and date */}
                 <Accordion.Header>
                   <div className="d-flex justify-content-between align-items-center w-100">
                     <div>
@@ -44,6 +52,7 @@ export default function ViewOrders() {
                   </div>
                 </Accordion.Header>
 
+                {/* Body shows the line items in a table */}
                 <Accordion.Body>
                   <h5>Order Items</h5>
                   <Table striped bordered hover responsive>
@@ -68,8 +77,11 @@ export default function ViewOrders() {
                           </tr>
                         ))
                       ) : (
+                        // Fallback row if there are no items in this order
                         <tr>
-                          <td colSpan="5">No items found.</td>
+                          <td colSpan="5" className="text-center">
+                            No items found.
+                          </td>
                         </tr>
                       )}
                     </tbody>

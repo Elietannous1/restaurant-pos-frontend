@@ -1,10 +1,11 @@
-import React, { useState } from "react";
-import { Form, Button, Container, Card } from "react-bootstrap";
-import "../styles/Register.css";
-import { useNavigate, Link } from "react-router-dom";
-import { register } from "../services/RegisterApiRequest";
+import React, { useState } from "react"; // React core + useState hook
+import { Form, Button, Container, Card } from "react-bootstrap"; // Bootstrap form/layout components
+import "../styles/Register.css"; // Page-specific styles
+import { useNavigate, Link } from "react-router-dom"; // Navigation and link components
+import { register } from "../services/RegisterApiRequest"; // API call to register new user
 
 function Register() {
+  // formData holds all input values
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -12,9 +13,11 @@ function Register() {
     confirmPassword: "",
   });
 
+  // error message to display validation or request errors
   const [error, setError] = useState(null);
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // hook to redirect on success
 
+  // Update formData when any input changes
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -22,19 +25,24 @@ function Register() {
     });
   };
 
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
 
+    // Client-side password match validation
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match");
       return;
     }
 
     try {
+      // Call register API with username, email, password
       await register(formData.username, formData.email, formData.password);
+      // On success, navigate to main dashboard
       navigate("/MainDashboard");
     } catch (e) {
+      // Display any error message from API or a default
       setError(e.message || "Registration failed");
     }
   };
@@ -46,7 +54,10 @@ function Register() {
           <Card className="register-card p-3 shadow-lg">
             <Card.Body>
               <h2 className="text-center mb-3">Create Account</h2>
+
+              {/* Display error if present */}
               {error && <p className="text-danger text-center">{error}</p>}
+
               <Form onSubmit={handleSubmit}>
                 {/* Username Field */}
                 <Form.Group className="mb-3" controlId="formBasicUsername">
@@ -114,7 +125,7 @@ function Register() {
                   </Button>
                 </div>
 
-                {/* Login Link */}
+                {/* Link to login for existing users */}
                 <p className="text-center mt-3 mb-0">
                   Already have an account?{" "}
                   <Link to="/" className="text-primary text-decoration-none">

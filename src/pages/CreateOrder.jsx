@@ -2,13 +2,13 @@ import React, { useState, useEffect } from "react";
 import {
   getCategories,
   getProductsByCategory,
-} from "../services/CategoryApiRequest";
+} from "../services/CategoryApiRequest"; // API calls to fetch categories and products
 import {
   createOrder, // API call: POST /order/create
   fetchAllOrders, // API call: GET /order
   updateOrderStatus, // API call: PUT /order/update/status/:orderId
 } from "../services/OrderApiRequest";
-import { fetchProductNames } from "../services/ProductApiRequest";
+import { fetchProductNames } from "../services/ProductApiRequest"; // API call to map product IDs → names/prices
 import {
   Container,
   Row,
@@ -18,31 +18,38 @@ import {
   Form,
   Nav,
   Col,
-} from "react-bootstrap";
-import Sidebar from "../components/Sidebar";
-import { useSidebar } from "../context/SideBarContext";
+} from "react-bootstrap"; // UI components
+import Sidebar from "../components/Sidebar"; // Sidebar component
+import { useSidebar } from "../context/SideBarContext"; // Hook for sidebar toggle state
 
 export default function CreateOrder() {
+  // Local state for current (unsubmitted) order items and form fields
   const [orderItems, setOrderItems] = useState([]);
   const [orderStatus, setOrderStatus] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [quantityInputs, setQuantityInputs] = useState({});
-  const [orders, setOrders] = useState([]); // Local orders (not yet finalized)
-  const [activeOrders, setActiveOrders] = useState([]); // Orders fetched from DB
 
+  // Local list of orders added but not yet finalized
+  const [orders, setOrders] = useState([]);
+
+  // Orders fetched from backend that are still active
+  const [activeOrders, setActiveOrders] = useState([]);
+
+  // Sidebar open/close state and toggle function
   const { sidebarOpen, toggleSidebar } = useSidebar();
 
-  // Category and product states
+  // Category/product selection state
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [categoryProducts, setCategoryProducts] = useState([]);
 
-  // Fetch categories on mount
+  // Fetch all categories on component mount
   useEffect(() => {
     async function fetchCats() {
       try {
         const data = await getCategories();
         setCategories(data);
+        // default to first category if available
         if (data.length > 0) setSelectedCategory(data[0].categoryId);
       } catch (error) {
         console.error("Error fetching categories", error);
@@ -51,58 +58,52 @@ export default function CreateOrder() {
     fetchCats();
   }, []);
 
-  // Fetch products for selected category
+  // Fetch products whenever selectedCategory changes
   useEffect(() => {
     async function fetchCategoryProducts() {
-      if (selectedCategory) {
-        try {
-          const data = await getProductsByCategory(selectedCategory);
-          setCategoryProducts(data);
-        } catch (error) {
-          console.error("Error fetching products for category", error);
-        }
+      if (!selectedCategory) return;
+      try {
+        const data = await getProductsByCategory(selectedCategory);
+        setCategoryProducts(data);
+      } catch (error) {
+        console.error("Error fetching products for category", error);
       }
     }
     fetchCategoryProducts();
   }, [selectedCategory]);
 
-  // Load active orders from backend
+  // Load active orders from backend (excluding COMPLETED)
   const loadActiveOrders = async () => {
     try {
       const data = await fetchAllOrders();
-      setActiveOrders(
-        data.filter((order) => order.orderStatus !== "COMPLETED")
-      );
+      setActiveOrders(data.filter((o) => o.orderStatus !== "COMPLETED"));
     } catch (error) {
       console.error("Error fetching active orders:", error);
     }
   };
 
-  // Enrich active orders with product details if they aren't enriched already
+  // Enrich orders with productName & price using productMapping
   useEffect(() => {
     async function enrichActiveOrders() {
+      if (
+        activeOrders.length === 0 ||
+        !activeOrders[0].orderItems?.length ||
+        "productName" in activeOrders[0].orderItems[0]
+      ) {
+        return;
+      }
       try {
-        if (
-          activeOrders.length > 0 &&
-          activeOrders[0].orderItems &&
-          activeOrders[0].orderItems.length > 0 &&
-          !("productName" in activeOrders[0].orderItems[0])
-        ) {
-          const productMapping = await fetchProductNames(); // mapping: { id: { productName, price, ... } }
-          const enriched = activeOrders.map((order) => ({
-            ...order,
-            orderItems: order.orderItems.map((item) => ({
-              ...item,
-              productName: productMapping[item.product]
-                ? productMapping[item.product].productName
-                : item.product,
-              productPrice: productMapping[item.product]
-                ? productMapping[item.product].price
-                : undefined,
-            })),
-          }));
-          setActiveOrders(enriched);
-        }
+        const productMapping = await fetchProductNames();
+        const enriched = activeOrders.map((order) => ({
+          ...order,
+          orderItems: order.orderItems.map((item) => ({
+            ...item,
+            productName:
+              productMapping[item.product]?.productName ?? item.product,
+            productPrice: productMapping[item.product]?.price,
+          })),
+        }));
+        setActiveOrders(enriched);
       } catch (error) {
         console.error("Error enriching active orders:", error);
       }
@@ -110,80 +111,72 @@ export default function CreateOrder() {
     enrichActiveOrders();
   }, [activeOrders]);
 
+  // Handle quantity input change, enforce minimum of 1
   const handleQuantityChange = (productId, value) => {
-    const quantity = Math.max(1, parseInt(value) || 1);
-    setQuantityInputs((prev) => ({ ...prev, [productId]: quantity }));
+    const qty = Math.max(1, parseInt(value) || 1);
+    setQuantityInputs((prev) => ({ ...prev, [productId]: qty }));
   };
 
-  // Add product to current order summary
+  // Add or update an item in the current order summary
   const addToOrder = (product) => {
-    const quantityToAdd = quantityInputs[product.id] || 1;
-    setOrderItems((prevItems) => {
-      const existingIndex = prevItems.findIndex(
-        (item) => item.product.id === product.id
-      );
-      if (existingIndex > -1) {
-        const updatedItems = [...prevItems];
-        updatedItems[existingIndex].quantity = quantityToAdd;
-        return updatedItems;
+    const qty = quantityInputs[product.id] || 1;
+    setOrderItems((prev) => {
+      const idx = prev.findIndex((i) => i.product.id === product.id);
+      if (idx > -1) {
+        const copy = [...prev];
+        copy[idx].quantity = qty;
+        return copy;
       } else {
-        return [...prevItems, { product, quantity: quantityToAdd }];
+        return [...prev, { product, quantity: qty }];
       }
     });
+    // reset input for that product
     setQuantityInputs((prev) => ({ ...prev, [product.id]: 1 }));
   };
 
+  // Remove an item from current order summary
   const removeOrderItem = (productId) => {
-    setOrderItems((prevItems) =>
-      prevItems.filter((item) => item.product.id !== productId)
-    );
+    setOrderItems((prev) => prev.filter((i) => i.product.id !== productId));
   };
 
-  // Calculate total cost using productPrice from each order item
-  const calculateTotalCost = (items) => {
-    return items
-      .reduce(
-        (total, item) => total + (item.productPrice || 0) * item.quantity,
-        0
-      )
+  // Compute total cost of given items array
+  const calculateTotalCost = (items) =>
+    items
+      .reduce((sum, itm) => sum + (itm.productPrice || 0) * itm.quantity, 0)
       .toFixed(2);
-  };
 
-  // Build an order object matching the backend DTO, including product details for display
+  // Add current summary as a new local order
   const addOrder = () => {
-    if (orderItems.length === 0) return;
+    if (!orderItems.length) return;
     const newOrder = {
       orderDate: new Date().toISOString(),
-      orderItems: orderItems.map((item) => ({
-        productId: item.product.id,
-        productName: item.product.productName,
-        productPrice: item.product.price, // include price
-        quantity: item.quantity,
+      orderItems: orderItems.map((i) => ({
+        productId: i.product.id,
+        productName: i.product.productName,
+        productPrice: i.product.price,
+        quantity: i.quantity,
       })),
-      orderStatus: orderStatus,
-      customerName: customerName, // display only
+      orderStatus,
+      customerName,
     };
     setOrders((prev) => [...prev, newOrder]);
-    // Clear the current order summary
+    // clear form
     setOrderItems([]);
     setOrderStatus("");
     setCustomerName("");
   };
 
-  // Delete an order from local orders (Order Details container)
-  const deleteOrder = (orderIndex) => {
-    setOrders((prev) => prev.filter((_, idx) => idx !== orderIndex));
+  // Delete a local (unsubmitted) order by index
+  const deleteOrder = (idx) => {
+    setOrders((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  // Finalize orders: send them to backend and reload active orders
+  // Submit all local orders to backend, then reload active orders
   const finalizeOrders = async () => {
-    if (orders.length === 0) return;
+    if (!orders.length) return;
     try {
       await Promise.all(
-        orders.map((order) => {
-          const { customerName, ...payload } = order;
-          return createOrder(payload);
-        })
+        orders.map(({ customerName, ...payload }) => createOrder(payload))
       );
       console.log("Orders created successfully.");
       setOrders([]);
@@ -193,28 +186,30 @@ export default function CreateOrder() {
     }
   };
 
-  // Update status for an active order
+  // Update status of an existing active order
   const handleActiveOrderStatusChange = async (orderId, newStatus) => {
     try {
-      console.log(`Updating order ${orderId} status to ${newStatus}`);
       await updateOrderStatus(orderId, newStatus);
-      console.log(`Order ${orderId} status updated to ${newStatus}`);
       await loadActiveOrders();
     } catch (error) {
       console.error(`Error updating order ${orderId} status:`, error);
     }
   };
 
+  // Initial load of active orders
   useEffect(() => {
     loadActiveOrders();
   }, []);
 
   return (
     <div className="create-order-layout d-flex" style={{ minHeight: "100vh" }}>
+      {/* Sidebar toggle */}
       <Sidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
+
+      {/* Main content area */}
       <div className="main-content flex-grow-1 p-4">
         <Container fluid>
-          {/* Category Navigation */}
+          {/* Category tabs */}
           <Row className="mb-4">
             <Col>
               <Nav variant="tabs" activeKey={selectedCategory}>
@@ -231,7 +226,8 @@ export default function CreateOrder() {
               </Nav>
             </Col>
           </Row>
-          {/* Grid Layout */}
+
+          {/* Grid: Products, Summary, Details, Active Orders */}
           <div
             style={{
               display: "grid",
@@ -285,7 +281,7 @@ export default function CreateOrder() {
               </Card.Body>
             </Card>
 
-            {/* Order Summary (Local Order) */}
+            {/* Order Summary */}
             <Card className="shadow">
               <Card.Header as="h5" className="bg-success text-white">
                 Order Summary
@@ -343,7 +339,7 @@ export default function CreateOrder() {
               </Card.Body>
             </Card>
 
-            {/* Order Details (Local Orders) */}
+            {/* Order Details (Local) */}
             <Card className="shadow">
               <Card.Header as="h5" className="bg-info text-white">
                 Order Details
@@ -366,8 +362,8 @@ export default function CreateOrder() {
                         <div>
                           Items:
                           <ul style={{ paddingLeft: "1.2rem", margin: 0 }}>
-                            {order.orderItems.map((itm, idx2) => (
-                              <li key={idx2}>
+                            {order.orderItems.map((itm, i2) => (
+                              <li key={i2}>
                                 {itm.productName} (x{itm.quantity})
                               </li>
                             ))}
@@ -377,7 +373,6 @@ export default function CreateOrder() {
                           Total: ${calculateTotalCost(order.orderItems)}
                         </div>
                         <div>Status: {order.orderStatus}</div>
-                        {/* Delete button to remove order */}
                         <Button
                           variant="danger"
                           size="sm"
@@ -402,7 +397,7 @@ export default function CreateOrder() {
               </Card.Body>
             </Card>
 
-            {/* Active Orders from the DB */}
+            {/* Active Orders from DB */}
             <Card className="shadow" style={{ gridColumn: "4 / 5" }}>
               <Card.Header as="h5" className="bg-warning text-dark">
                 Active Orders
@@ -425,9 +420,9 @@ export default function CreateOrder() {
                         <div>
                           Items:
                           <ul style={{ paddingLeft: "1.2rem", margin: 0 }}>
-                            {order.orderItems.map((item, idx) => (
-                              <li key={idx}>
-                                {item.productName} (x{item.quantity})
+                            {order.orderItems.map((itm, i) => (
+                              <li key={i}>
+                                {itm.productName} (x{itm.quantity})
                               </li>
                             ))}
                           </ul>

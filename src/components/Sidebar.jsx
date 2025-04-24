@@ -14,21 +14,36 @@ import { useSidebar } from "../context/SideBarContext";
 import { clearToken } from "../utils/storage";
 import "../styles/sidebar.css";
 
+/**
+ * Sidebar component provides navigation buttons for the app.
+ * It allows toggling open/closed state, navigating between routes,
+ * and logging out by clearing auth token.
+ */
 export default function Sidebar() {
+  // Consume sidebar open state and toggle function from context
   const { sidebarOpen, toggleSidebar } = useSidebar();
+  // Hook for programmatic route navigation
   const navigate = useNavigate();
 
+  /**
+   * Handle user logout: clear stored token and redirect to login page
+   */
   const handleLogout = () => {
     clearToken();
     navigate("/");
   };
 
   return (
+    // Apply CSS classes based on sidebar open/closed state
     <div className={`sidebar ${sidebarOpen ? "open" : "closed"}`}>
+      {/* Button to toggle sidebar collapse/expand */}
       <button className="menu-btn" onClick={toggleSidebar}>
         <FaBars />
       </button>
+
+      {/* Navigation buttons section */}
       <nav className="sidebar-nav">
+        {/* Dashboard navigation */}
         <Button
           variant="primary"
           className="sidebar-btn"
@@ -39,6 +54,8 @@ export default function Sidebar() {
           </span>
           <span className="text">Dashboard</span>
         </Button>
+
+        {/* Create Order navigation */}
         <Button
           variant="primary"
           className="sidebar-btn"
@@ -49,6 +66,8 @@ export default function Sidebar() {
           </span>
           <span className="text">Create Order</span>
         </Button>
+
+        {/* View Orders navigation */}
         <Button
           variant="primary"
           className="sidebar-btn"
@@ -59,6 +78,8 @@ export default function Sidebar() {
           </span>
           <span className="text">View Orders</span>
         </Button>
+
+        {/* Product Management navigation */}
         <Button
           variant="primary"
           className="sidebar-btn"
@@ -69,6 +90,8 @@ export default function Sidebar() {
           </span>
           <span className="text">Product Management</span>
         </Button>
+
+        {/* Category Management navigation */}
         <Button
           variant="primary"
           className="sidebar-btn"
@@ -79,6 +102,8 @@ export default function Sidebar() {
           </span>
           <span className="text">Category Management</span>
         </Button>
+
+        {/* Logout button */}
         <Button className="sidebar-btn logout-btn" onClick={handleLogout}>
           <span className="icon">
             <FaSignOutAlt />
