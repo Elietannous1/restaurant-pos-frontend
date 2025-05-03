@@ -9,21 +9,27 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { Routes, Route } from "react-router-dom";
 import { SidebarProvider } from "./context/SideBarContext";
 import AccountRecovery from "./pages/recovery/AccountRecovery";
-
+import { Provider } from "react-redux";
+import { store } from "../src/store/reduxStore";
 function App() {
   return (
-    <SidebarProvider>
-      <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/MainDashboard" element={<MainDashboard />} />
-        <Route path="/CreateOrder" element={<CreateOrder />} />
-        <Route path="/ViewOrders" element={<ViewOrders />} />
-        <Route path="/ProductManagement" element={<ProductManagement />} />
-        <Route path="/CategoryManagement" element={<CategoryManagement />} />
-        <Route path="/recovery/AccountRecovery" element={<AccountRecovery />} />
-      </Routes>
-    </SidebarProvider>
+    <Provider store={store}>
+      <SidebarProvider>
+        <Routes>
+          <Route path="/" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/MainDashboard" element={<MainDashboard />} />
+          <Route path="/CreateOrder" element={<CreateOrder />} />
+          <Route path="/ViewOrders" element={<ViewOrders />} />
+          <Route path="/ProductManagement" element={<ProductManagement />} />
+          <Route path="/CategoryManagement" element={<CategoryManagement />} />
+          <Route
+            path="/recovery/AccountRecovery"
+            element={<AccountRecovery />}
+          />
+        </Routes>
+      </SidebarProvider>
+    </Provider>
   );
 }
 
