@@ -1,50 +1,51 @@
-import React, { useState } from "react"; // React core + useState hook
-import { Form, Button, Container, Card } from "react-bootstrap"; // Bootstrap form/layout components
-import "../styles/Register.css"; // Page-specific styles
-import { useNavigate, Link } from "react-router-dom"; // Navigation and link components
-import { register } from "../services/RegisterApiRequest"; // API call to register new user
+import React, { useState } from "react";
+import { Form, Button, Container, Card } from "react-bootstrap";
+import "../styles/Register.css";
+import { Link, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { registerUser } from "../store/authSlice";
 
-function Register() {
-  // formData holds all input values
+export default function Register() {
   const [formData, setFormData] = useState({
     username: "",
     email: "",
     password: "",
     confirmPassword: "",
   });
+  const [localError, setLocalError] = useState(null);
 
-  // error message to display validation or request errors
-  const [error, setError] = useState(null);
-  const navigate = useNavigate(); // hook to redirect on success
+  const dispatch = useDispatch();
+  const { status, error } = useSelector((state) => state.auth);
+  const navigate = useNavigate();
 
-  // Update formData when any input changes
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(null);
+    if (status === "loading") return;
 
-    // Client-side password match validation
+    // client-side password match validation
     if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
+      setLocalError("Passwords do not match");
       return;
     }
+    setLocalError(null);
 
-    try {
-      // Call register API with username, email, password
-      await register(formData.username, formData.email, formData.password);
-      // On success, navigate to main dashboard
+    // dispatch the registerUser thunk
+    const result = await dispatch(
+      registerUser({
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+      })
+    );
+
+    if (registerUser.fulfilled.match(result)) {
       navigate("/MainDashboard");
-    } catch (e) {
-      // Display any error message from API or a default
-      setError(e.message || "Registration failed");
     }
+    // on failure, `error` from Redux will show
   };
 
   return (
@@ -55,11 +56,14 @@ function Register() {
             <Card.Body>
               <h2 className="text-center mb-3">Create Account</h2>
 
-              {/* Display error if present */}
-              {error && <p className="text-danger text-center">{error}</p>}
+              {localError && (
+                <p className="text-danger text-center">{localError}</p>
+              )}
+              {!localError && status === "failed" && (
+                <p className="text-danger text-center">{error}</p>
+              )}
 
               <Form onSubmit={handleSubmit}>
-                {/* Username Field */}
                 <Form.Group className="mb-3" controlId="formBasicUsername">
                   <Form.Label>Username</Form.Label>
                   <Form.Control
@@ -73,7 +77,6 @@ function Register() {
                   />
                 </Form.Group>
 
-                {/* Email Field */}
                 <Form.Group className="mb-3" controlId="formBasicEmail">
                   <Form.Label>Email address</Form.Label>
                   <Form.Control
@@ -87,7 +90,6 @@ function Register() {
                   />
                 </Form.Group>
 
-                {/* Password Field */}
                 <Form.Group className="mb-3" controlId="formBasicPassword">
                   <Form.Label>Password</Form.Label>
                   <Form.Control
@@ -101,7 +103,6 @@ function Register() {
                   />
                 </Form.Group>
 
-                {/* Confirm Password Field */}
                 <Form.Group
                   className="mb-3"
                   controlId="formBasicConfirmPassword"
@@ -118,14 +119,17 @@ function Register() {
                   />
                 </Form.Group>
 
-                {/* Submit Button */}
                 <div className="d-grid">
-                  <Button variant="primary" type="submit" size="lg">
-                    Register
+                  <Button
+                    variant="primary"
+                    type="submit"
+                    size="lg"
+                    disabled={status === "loading"}
+                  >
+                    {status === "loading" ? "Registering…" : "Register"}
                   </Button>
                 </div>
 
-                {/* Link to login for existing users */}
                 <p className="text-center mt-3 mb-0">
                   Already have an account?{" "}
                   <Link to="/" className="text-primary text-decoration-none">
@@ -140,5 +144,3 @@ function Register() {
     </div>
   );
 }
-
-export default Register;
