@@ -1,32 +1,44 @@
-import React from "react"; // React core
-import Sidebar from "../components/Sidebar"; // Sidebar component
-import { useSidebar } from "../context/SideBarContext"; // Hook to read/toggle sidebar state
-import SalesMetrics from "../components/SalesMetrics"; // Cards showing sales KPIs
-import TopSellingChart from "../components/ChartComponents/TopSellingChart"; // Bar chart of top items
-import SalesOverTimeChart from "../components/ChartComponents/SalesOverTimeChart"; // Line chart of sales over time
-import "../styles/dashboard.css"; // Dashboard-specific styles
+// src/pages/MainDashboard.jsx
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import Sidebar from "../components/Sidebar";
+import SalesMetrics from "../components/SalesMetrics";
+import TopSellingChart from "../components/ChartComponents/TopSellingChart";
+import SalesOverTimeChart from "../components/ChartComponents/SalesOverTimeChart";
+import { useSidebar } from "../context/SideBarContext";
+import { loadDashboard } from "../store/dashboardSlice";
+import "../styles/dashboard.css";
 
 export default function MainDashboard() {
-  // Get sidebar open/closed state and toggler
   const { sidebarOpen, toggleSidebar } = useSidebar();
+  const dispatch = useDispatch();
+  const { barData, lineData, todaySales, last30Days, status, error } =
+    useSelector((state) => state.dashboard);
+
+  useEffect(() => {
+    // build dates & productNames however you need them
+    const startDate = "2025-04-01";
+    const endDate = "2025-04-30";
+    const productNames = {}; // fetch or import your product map here
+
+    dispatch(loadDashboard({ startDate, endDate, productNames }));
+  }, [dispatch]);
+
+  if (status === "loading") {
+    return <div>Loading dashboard…</div>;
+  }
+  if (status === "failed") {
+    return <div>Error loading dashboard: {error.toString()}</div>;
+  }
 
   return (
     <div className="dashboard-container">
-      {/* Sidebar navigation */}
       <Sidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
-
-      {/* Main dashboard content */}
       <div className="dashboard-content">
-        {/* Top row: summary metrics */}
-        <SalesMetrics />
-
-        {/* Charts row: side-by-side bar & line charts */}
+        <SalesMetrics todaySales={todaySales} last30Days={last30Days} />
         <div className="charts-container">
-          {/* Chart showing best-selling items */}
-          <TopSellingChart />
-
-          {/* Chart showing total sales over selected time period */}
-          <SalesOverTimeChart />
+          <TopSellingChart data={barData} />
+          <SalesOverTimeChart data={lineData} />
         </div>
       </div>
     </div>
