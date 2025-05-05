@@ -9,11 +9,13 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { Routes, Route } from "react-router-dom";
 import { SidebarProvider } from "./context/SideBarContext";
 import AccountRecovery from "./pages/recovery/AccountRecovery";
+import GlobalSpinner from "./components/GlobalSpinner";
 import { Provider } from "react-redux";
 import { store } from "../src/store/reduxStore";
 function App() {
   return (
     <Provider store={store}>
+      <GlobalSpinner />
       <SidebarProvider>
         <Routes>
           <Route path="/" element={<Login />} />
