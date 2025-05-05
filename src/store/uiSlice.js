@@ -1,35 +1,27 @@
-import { createSlice, isAnyOf } from "@reduxjs/toolkit";
-import { loginUser, registerUser } from "./authSlice";
-import { loadDashboard } from "./dashboardSlice";
+// src/store/uiSlice.js
+import {
+  createSlice,
+  isPending,
+  isFulfilled,
+  isRejected,
+} from "@reduxjs/toolkit";
 
 const uiSlice = createSlice({
   name: "ui",
   initialState: { loadingCount: 0 },
   reducers: {},
   extraReducers: (builder) => {
-    const pendingActions = [
-      loginUser.pending,
-      registerUser.pending,
-      loadDashboard.pending,
-      // add other thunks here…
-    ];
-    const fulfilledOrRejected = [
-      loginUser.fulfilled,
-      loginUser.rejected,
-      registerUser.fulfilled,
-      registerUser.rejected,
-      loadDashboard.fulfilled,
-      loadDashboard.rejected,
-      // …and so on
-    ];
-
-    builder
-      .addMatcher(isAnyOf(...pendingActions), (state) => {
-        state.loadingCount += 1;
-      })
-      .addMatcher(isAnyOf(...fulfilledOrRejected), (state) => {
-        state.loadingCount = Math.max(state.loadingCount - 1, 0);
-      });
+    // Any action ending in /pending will bump the counter
+    builder.addMatcher(isPending, (state) => {
+      state.loadingCount += 1;
+    });
+    // Any action ending in /fulfilled or /rejected will decrement it
+    builder.addMatcher(isFulfilled, (state) => {
+      state.loadingCount = Math.max(state.loadingCount - 1, 0);
+    });
+    builder.addMatcher(isRejected, (state) => {
+      state.loadingCount = Math.max(state.loadingCount - 1, 0);
+    });
   },
 });
 
