@@ -1,3 +1,4 @@
+// src/pages/CategoryManagement.jsx
 import React, { useState, useEffect } from "react";
 import {
   Container,
@@ -10,74 +11,39 @@ import {
 } from "react-bootstrap";
 import Sidebar from "../components/Sidebar";
 import { useSidebar } from "../context/SideBarContext";
+import { useDispatch, useSelector } from "react-redux";
 import {
-  getCategories,
+  fetchCategories,
   createCategory,
-  deleteCategory, // Function to delete a category by ID
-} from "../services/CategoryApiRequest";
+  deleteCategory,
+} from "../store/categorySlice";
 import "../styles/ProductManagement.css";
 
-/**
- * CategoryManagement component provides UI for listing,
- * creating, and deleting product categories.
- */
 export default function CategoryManagement() {
-  // State to hold list of categories fetched from API
-  const [categories, setCategories] = useState([]);
-  // State to hold new category name input
   const [categoryName, setCategoryName] = useState("");
-  // State to hold new category description input
   const [description, setDescription] = useState("");
-
-  // Consume sidebar open state and toggle function from context
   const { sidebarOpen, toggleSidebar } = useSidebar();
 
-  // Fetch categories once on component mount
-  useEffect(() => {
-    async function loadCategories() {
-      try {
-        const data = await getCategories();
-        setCategories(data);
-      } catch (error) {
-        console.error("Error fetching categories:", error);
-      }
-    }
-    loadCategories();
-  }, []); // empty dependency array ensures this runs only once
+  const dispatch = useDispatch();
+  const {
+    items: categories,
+    status,
+    error,
+  } = useSelector((state) => state.categories);
 
-  /**
-   * Handle form submission to create a new category.
-   */
+  useEffect(() => {
+    dispatch(fetchCategories());
+  }, [dispatch]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const newCategory = { categoryName, description };
-      // Call API to create category
-      await createCategory(newCategory);
-      // Refresh list after creation
-      const data = await getCategories();
-      setCategories(data);
-      // Clear form inputs
-      setCategoryName("");
-      setDescription("");
-    } catch (error) {
-      console.error("Error creating category:", error);
-    }
+    await dispatch(createCategory({ categoryName, description }));
+    setCategoryName("");
+    setDescription("");
   };
 
-  /**
-   * Handle deleting a category by its ID.
-   */
   const handleDelete = async (categoryId) => {
-    try {
-      // Call API to delete
-      await deleteCategory(categoryId);
-      // Refresh list after deletion
-      const data = await getCategories();
-      setCategories(data);
-    } catch (error) {
-      console.error("Error deleting category:", error);
-    }
+    await dispatch(deleteCategory(categoryId));
   };
 
   return (
@@ -85,14 +51,13 @@ export default function CategoryManagement() {
       className="category-management-layout d-flex"
       style={{ minHeight: "100vh" }}
     >
-      {/* Sidebar with collapse control */}
       <Sidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
-
-      {/* Main content area grows to fill space */}
       <div className="main-content flex-grow-1 p-4">
         <Container className="category-management-container">
+          {status === "failed" && (
+            <p className="text-danger">Error: {error.toString()}</p>
+          )}
           <Row>
-            {/* Left column: display existing categories */}
             <Col md={6}>
               <h2 className="mb-4 text-center">Available Categories</h2>
               <Card className="shadow mb-4">
@@ -113,15 +78,13 @@ export default function CategoryManagement() {
                       </tr>
                     </thead>
                     <tbody>
-                      {/* Render rows if categories exist */}
-                      {categories && categories.length > 0 ? (
+                      {categories.length ? (
                         categories.map((cat) => (
                           <tr key={cat.categoryId}>
                             <td>{cat.categoryId}</td>
                             <td>{cat.categoryName}</td>
                             <td>{cat.description}</td>
                             <td>
-                              {/* Delete button triggers handleDelete */}
                               <Button
                                 variant="danger"
                                 size="sm"
@@ -133,7 +96,6 @@ export default function CategoryManagement() {
                           </tr>
                         ))
                       ) : (
-                        // Show placeholder when no categories
                         <tr>
                           <td colSpan="4" className="text-center">
                             No categories found.
@@ -146,7 +108,6 @@ export default function CategoryManagement() {
               </Card>
             </Col>
 
-            {/* Right column: form to create a new category */}
             <Col md={6}>
               <h2 className="mb-4 text-center">Create New Category</h2>
               <Card className="shadow">
@@ -172,7 +133,6 @@ export default function CategoryManagement() {
                         onChange={(e) => setDescription(e.target.value)}
                       />
                     </Form.Group>
-                    {/* Submit button for form */}
                     <Button variant="primary" type="submit">
                       Create Category
                     </Button>
