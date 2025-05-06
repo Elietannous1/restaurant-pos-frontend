@@ -1,4 +1,3 @@
-// src/pages/CreateOrder.jsx
 import React, { useState, useEffect } from "react";
 import {
   getCategories,
@@ -23,7 +22,7 @@ import {
   createOrder,
   updateOrderStatus,
 } from "../store/orderSlice";
-import { useVoiceCommands } from "../hooks/useVoiceCommands"; // ← import hook
+import { useVoiceCommands } from "../hooks/useVoiceCommands";
 
 export default function CreateOrder() {
   // Local state for building orders
@@ -41,10 +40,10 @@ export default function CreateOrder() {
   // Enriched active orders for display
   const [enrichedActive, setEnrichedActive] = useState([]);
 
-  // Sidebar
+  // Sidebar toggle
   const { sidebarOpen, toggleSidebar } = useSidebar();
 
-  // Redux dispatch & selectors
+  // Redux hooks
   const dispatch = useDispatch();
   const {
     items: serverOrders,
@@ -52,35 +51,74 @@ export default function CreateOrder() {
     error,
   } = useSelector((state) => state.orders);
 
-  // Voice commands hook
+  // Map number-words to digits
+  const numberMap = {
+    one: 1,
+    two: 2,
+    three: 3,
+    four: 4,
+    five: 5,
+    six: 6,
+    seven: 7,
+    eight: 8,
+    nine: 9,
+    ten: 10,
+  };
+
+  // Then wire up your voice commands *after* your handlers like so:
   const { start, stop } = useVoiceCommands((text) => {
-    // match "add X productName"
-    const addMatch = text.match(/add\s+(\d+)\s+(.+)/);
+    const lower = text.toLowerCase().trim();
+
+    // “add X product” (X can be a digit or a word)
+    const addMatch = lower.match(
+      new RegExp(
+        `^add\\s+((?:\\d+)|(?:${Object.keys(numberMap).join("|")}))\\s+(.+)$`
+      )
+    );
     if (addMatch) {
-      const qty = parseInt(addMatch[1], 10);
-      const name = addMatch[2].toLowerCase();
+      const qtyToken = addMatch[1];
+      const qty = /^\d+$/.test(qtyToken)
+        ? parseInt(qtyToken, 10)
+        : numberMap[qtyToken] || 1;
+      const name = addMatch[2];
       const prod = categoryProducts.find((p) =>
         p.productName.toLowerCase().includes(name)
       );
-      if (prod) {
-        addToOrder(prod, qty);
-      }
+      if (prod) addToOrder(prod, qty);
       return;
     }
-    // match "remove productName"
-    const remMatch = text.match(/remove\s+(.+)/);
+
+    // “remove product”
+    const remMatch = lower.match(/^remove\s+(.+)$/);
     if (remMatch) {
-      const name = remMatch[1].toLowerCase();
+      const name = remMatch[1];
       const item = orderItems.find((i) =>
         i.product.productName.toLowerCase().includes(name)
       );
-      if (item) {
-        removeOrderItem(item.product.id);
-      }
+      if (item) removeOrderItem(item.product.id);
+      return;
+    }
+
+    // “customer name X”
+    if (lower.startsWith("customer name ")) {
+      setCustomerName(lower.replace("customer name ", "").trim());
+      return;
+    }
+
+    // “set status to X”
+    if (lower.startsWith("set status to ")) {
+      setOrderStatus(lower.replace("set status to ", "").trim().toUpperCase());
+      return;
+    }
+
+    // “finalize order” or “submit order” (allows extra words)
+    if (/^(?:finalize|submit)\b.*\border\b/.test(lower)) {
+      finalizeOrders();
+      return;
     }
   });
 
-  // Fetch categories
+  // Fetch categories once
   useEffect(() => {
     (async () => {
       try {
@@ -88,12 +126,12 @@ export default function CreateOrder() {
         setCategories(data);
         if (data.length > 0) setSelectedCategory(data[0].categoryId);
       } catch (err) {
-        console.error("Error fetching categories", err);
+        console.error(err);
       }
     })();
   }, []);
 
-  // Fetch products by category
+  // Fetch products when category changes
   useEffect(() => {
     (async () => {
       if (!selectedCategory) return;
@@ -101,7 +139,7 @@ export default function CreateOrder() {
         const data = await getProductsByCategory(selectedCategory);
         setCategoryProducts(data);
       } catch (err) {
-        console.error("Error fetching products", err);
+        console.error(err);
       }
     })();
   }, [selectedCategory]);
@@ -111,12 +149,12 @@ export default function CreateOrder() {
     dispatch(fetchOrders());
   }, [dispatch]);
 
-  // Keep only active orders
+  // Filter active orders
   const activeOrders = serverOrders.filter(
     (o) => o.orderStatus !== "COMPLETED"
   );
 
-  // Enrich active orders
+  // Enrich active orders with names & prices
   useEffect(() => {
     (async () => {
       if (!activeOrders.length) {
@@ -138,18 +176,17 @@ export default function CreateOrder() {
         }));
         setEnrichedActive(enriched);
       } catch (err) {
-        console.error("Error enriching orders:", err);
+        console.error(err);
       }
     })();
   }, [activeOrders]);
 
-  // Handlers for order-building
+  // Handlers
   const handleQuantityChange = (productId, value) => {
     const qty = Math.max(1, parseInt(value) || 1);
     setQuantityInputs((prev) => ({ ...prev, [productId]: qty }));
   };
 
-  // Updated to accept optional qtyOverride
   const addToOrder = (product, qtyOverride) => {
     const qty =
       typeof qtyOverride === "number"
@@ -197,11 +234,11 @@ export default function CreateOrder() {
   const finalizeOrders = async () => {
     if (!orders.length) return;
     try {
-      await Promise.all(orders.map((order) => dispatch(createOrder(order))));
+      await Promise.all(orders.map((o) => dispatch(createOrder(o))));
       setOrders([]);
       dispatch(fetchOrders());
     } catch (err) {
-      console.error("Error finalizing orders:", err);
+      console.error(err);
     }
   };
 
@@ -209,7 +246,7 @@ export default function CreateOrder() {
     try {
       await dispatch(updateOrderStatus({ orderId, newStatus }));
     } catch (err) {
-      console.error(`Error updating order ${orderId}:`, err);
+      console.error(err);
     }
   };
 
@@ -235,7 +272,7 @@ export default function CreateOrder() {
       <div className="main-content flex-grow-1 p-4">
         {status === "loading" && <div>Loading orders…</div>}
         {status === "failed" && (
-          <div className="text-danger">Error: {error.toString()}</div>
+          <div className="text-danger">Error: {error}</div>
         )}
 
         <Container fluid>
