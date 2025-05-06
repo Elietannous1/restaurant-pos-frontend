@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react"; // React core + hooks
+// src/pages/ProductsManagement.jsx
+import React, { useState, useEffect } from "react";
 import {
   Container,
   Row,
@@ -7,123 +8,86 @@ import {
   Card,
   Button,
   Form,
-} from "react-bootstrap"; // Bootstrap UI components
-import Sidebar from "../components/Sidebar"; // Sidebar navigation
-import { useSidebar } from "../context/SideBarContext"; // Hook to control sidebar state
+} from "react-bootstrap";
+import Sidebar from "../components/Sidebar";
+import { useSidebar } from "../context/SideBarContext";
+import { useDispatch, useSelector } from "react-redux";
 import {
-  fetchProducts, // API: GET all products
-  createProduct, // API: POST new product
-  updateProduct, // API: PUT update existing
-  deleteProduct, // API: DELETE product
-} from "../services/ProductApiRequest";
-import { getCategories } from "../services/CategoryApiRequest"; // API: GET all categories
-import "../styles/ProductManagement.css"; // CSS for this page
+  fetchProducts,
+  createProduct as createProductAction,
+  updateProduct as updateProductAction,
+  deleteProduct as deleteProductAction,
+} from "../store/productSlice";
+import { fetchCategories } from "../store/categorySlice";
+import "../styles/ProductManagement.css";
 
 export default function ProductsManagement() {
-  // State for list of products and categories
-  const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
+  const dispatch = useDispatch();
+  const {
+    items: products,
+    status: prodStatus,
+    error: prodError,
+  } = useSelector((state) => state.products);
+  const { items: categories } = useSelector((state) => state.categories);
 
-  // Form fields for create / edit
-  const [productName, setProductName] = useState("");
+  // form state
+  const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
   const [isAvailable, setIsAvailable] = useState(true);
   const [categoryId, setCategoryId] = useState("");
-
-  // Editing mode flags
   const [isEditing, setIsEditing] = useState(false);
-  const [editingProductId, setEditingProductId] = useState(null);
+  const [editId, setEditId] = useState(null);
 
-  // Sidebar open/close
-  const { sidebarOpen, toggleSidebar } = useSidebar();
-
-  // Load products & categories once on mount
+  // load initial data
   useEffect(() => {
-    // Fetch products
-    async function loadData() {
-      try {
-        const productsData = await fetchProducts();
-        setProducts(productsData);
-      } catch (error) {
-        console.error("Error fetching products:", error);
-      }
-    }
-    // Fetch categories
-    async function loadCategories() {
-      try {
-        const data = await getCategories();
-        setCategories(data);
-        // Default select first category
-        if (data.length > 0) setCategoryId(data[0].categoryId);
-      } catch (error) {
-        console.error("Error fetching categories:", error);
-      }
-    }
-    loadData();
-    loadCategories();
-  }, []);
+    dispatch(fetchProducts());
+    dispatch(fetchCategories());
+  }, [dispatch]);
 
-  // Handle form submission for create or update
+  // default category once categories arrive
+  useEffect(() => {
+    if (categories.length && !categoryId) {
+      setCategoryId(categories[0].categoryId);
+    }
+  }, [categories, categoryId]);
+
+  const resetForm = () => {
+    setName("");
+    setPrice("");
+    setDescription("");
+    setIsAvailable(true);
+    setIsEditing(false);
+    setEditId(null);
+    if (categories.length) setCategoryId(categories[0].categoryId);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      // Build DTO
-      const productData = {
-        productName,
-        price: parseFloat(price),
-        description,
-        isAvailable,
-        categoryId,
-      };
+    const data = {
+      productName: name.trim(),
+      price: parseFloat(price) || 0,
+      description: description.trim(),
+      isAvailable,
+      categoryId,
+    };
 
-      if (isEditing) {
-        // Update existing product
-        await updateProduct(editingProductId, productData);
-      } else {
-        // Create new product
-        await createProduct(productData);
-      }
-      // Refresh product list
-      const productsData = await fetchProducts();
-      setProducts(productsData);
-
-      // Reset form & editing state
-      setProductName("");
-      setPrice("");
-      setDescription("");
-      setIsAvailable(true);
-      if (categories.length > 0) setCategoryId(categories[0].categoryId);
-      setIsEditing(false);
-      setEditingProductId(null);
-    } catch (error) {
-      console.error("Error saving product:", error);
+    if (isEditing) {
+      await dispatch(updateProductAction({ id: editId, productData: data }));
+    } else {
+      await dispatch(createProductAction(data));
     }
+    resetForm();
   };
 
-  // Delete a product and refresh list
-  const handleDelete = async (productId) => {
-    try {
-      await deleteProduct(productId);
-      const productsData = await fetchProducts();
-      setProducts(productsData);
-    } catch (error) {
-      console.error("Error deleting product:", error);
-    }
-  };
-
-  // Prepare form for editing a product
-  const handleEdit = (product) => {
-    setProductName(product.productName);
-    setPrice(product.price);
-    setDescription(product.description);
-    setIsAvailable(product.isAvailable);
-    setCategoryId(
-      product.categoryId ||
-        (categories.length > 0 ? categories[0].categoryId : "")
-    );
+  const startEdit = (p) => {
+    setName(p.productName || "");
+    setPrice(p.price != null ? String(p.price) : "");
+    setDescription(p.description || "");
+    setIsAvailable(!!p.isAvailable);
+    setCategoryId(p.categoryId || "");
     setIsEditing(true);
-    setEditingProductId(product.id);
+    setEditId(p.id);
   };
 
   return (
@@ -131,14 +95,18 @@ export default function ProductsManagement() {
       className="products-management-layout d-flex"
       style={{ minHeight: "100vh" }}
     >
-      {/* Sidebar */}
-      <Sidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
-
-      {/* Main content */}
+      <Sidebar
+        sidebarOpen={useSidebar().sidebarOpen}
+        toggleSidebar={useSidebar().toggleSidebar}
+      />
       <div className="main-content flex-grow-1 p-4">
         <Container className="products-management-container">
+          {prodStatus === "loading" && <p>Loading products…</p>}
+          {prodStatus === "failed" && (
+            <p className="text-danger">Error: {prodError}</p>
+          )}
+
           <Row>
-            {/* Product table */}
             <Col md={7}>
               <h2 className="mb-4 text-center">Available Products</h2>
               <Card className="shadow mb-4">
@@ -153,7 +121,7 @@ export default function ProductsManagement() {
                     <thead>
                       <tr>
                         <th>ID</th>
-                        <th>Product Name</th>
+                        <th>Name</th>
                         <th>Price</th>
                         <th>Description</th>
                         <th>Available</th>
@@ -162,30 +130,30 @@ export default function ProductsManagement() {
                       </tr>
                     </thead>
                     <tbody>
-                      {products.length > 0 ? (
-                        products.map((product) => (
-                          <tr key={product.id}>
-                            <td>{product.id}</td>
-                            <td>{product.productName}</td>
-                            <td>${product.price}</td>
-                            <td>{product.description}</td>
-                            <td>{product.isAvailable ? "Yes" : "No"}</td>
-                            <td>{product.categoryName || "-"}</td>
+                      {products.length ? (
+                        products.map((p) => (
+                          <tr key={p.id}>
+                            <td>{p.id}</td>
+                            <td>{p.productName}</td>
+                            <td>${p.price}</td>
+                            <td>{p.description}</td>
+                            <td>{p.isAvailable ? "Yes" : "No"}</td>
+                            <td>{p.categoryName || "-"}</td>
                             <td>
-                              {/* Edit button */}
                               <Button
                                 variant="warning"
                                 size="sm"
-                                onClick={() => handleEdit(product)}
+                                onClick={() => startEdit(p)}
                                 className="me-1"
                               >
                                 Edit
                               </Button>
-                              {/* Delete button */}
                               <Button
                                 variant="danger"
                                 size="sm"
-                                onClick={() => handleDelete(product.id)}
+                                onClick={() =>
+                                  dispatch(deleteProductAction(p.id))
+                                }
                               >
                                 Remove
                               </Button>
@@ -205,7 +173,6 @@ export default function ProductsManagement() {
               </Card>
             </Col>
 
-            {/* Create / Edit form */}
             <Col md={5}>
               <h2 className="mb-4 text-center">
                 {isEditing ? "Edit Product" : "Create New Product"}
@@ -213,44 +180,37 @@ export default function ProductsManagement() {
               <Card className="shadow">
                 <Card.Body>
                   <Form onSubmit={handleSubmit}>
-                    {/* Name field */}
-                    <Form.Group controlId="formProductName" className="mb-3">
+                    <Form.Group className="mb-3" controlId="formProductName">
                       <Form.Label>Product Name</Form.Label>
                       <Form.Control
                         type="text"
-                        placeholder="Enter product name"
-                        value={productName}
-                        onChange={(e) => setProductName(e.target.value)}
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
                         required
                       />
                     </Form.Group>
 
-                    {/* Price field */}
-                    <Form.Group controlId="formPrice" className="mb-3">
+                    <Form.Group className="mb-3" controlId="formPrice">
                       <Form.Label>Price</Form.Label>
                       <Form.Control
                         type="number"
-                        placeholder="Enter price"
                         value={price}
                         onChange={(e) => setPrice(e.target.value)}
                         required
                       />
                     </Form.Group>
 
-                    {/* Description */}
-                    <Form.Group controlId="formDescription" className="mb-3">
+                    <Form.Group className="mb-3" controlId="formDescription">
                       <Form.Label>Description</Form.Label>
                       <Form.Control
                         as="textarea"
                         rows={3}
-                        placeholder="Enter product description"
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                       />
                     </Form.Group>
 
-                    {/* Availability */}
-                    <Form.Group controlId="formAvailable" className="mb-3">
+                    <Form.Group className="mb-3" controlId="formAvailable">
                       <Form.Check
                         type="checkbox"
                         label="Available"
@@ -259,23 +219,21 @@ export default function ProductsManagement() {
                       />
                     </Form.Group>
 
-                    {/* Category selector */}
-                    <Form.Group controlId="formCategory" className="mb-3">
+                    <Form.Group className="mb-3" controlId="formCategory">
                       <Form.Label>Category</Form.Label>
                       <Form.Select
                         value={categoryId}
                         onChange={(e) => setCategoryId(e.target.value)}
                         required
                       >
-                        {categories.map((cat) => (
-                          <option key={cat.categoryId} value={cat.categoryId}>
-                            {cat.categoryName}
+                        {categories.map((c) => (
+                          <option key={c.categoryId} value={c.categoryId}>
+                            {c.categoryName}
                           </option>
                         ))}
                       </Form.Select>
                     </Form.Group>
 
-                    {/* Submit */}
                     <Button variant="primary" type="submit">
                       {isEditing ? "Update Product" : "Create Product"}
                     </Button>
