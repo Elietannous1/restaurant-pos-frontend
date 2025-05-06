@@ -23,6 +23,7 @@ import {
   createOrder,
   updateOrderStatus,
 } from "../store/orderSlice";
+import { useVoiceCommands } from "../hooks/useVoiceCommands"; // ← import hook
 
 export default function CreateOrder() {
   // Local state for building orders
@@ -51,7 +52,35 @@ export default function CreateOrder() {
     error,
   } = useSelector((state) => state.orders);
 
-  // Fetch categories (still local)
+  // Voice commands hook
+  const { start, stop } = useVoiceCommands((text) => {
+    // match "add X productName"
+    const addMatch = text.match(/add\s+(\d+)\s+(.+)/);
+    if (addMatch) {
+      const qty = parseInt(addMatch[1], 10);
+      const name = addMatch[2].toLowerCase();
+      const prod = categoryProducts.find((p) =>
+        p.productName.toLowerCase().includes(name)
+      );
+      if (prod) {
+        addToOrder(prod, qty);
+      }
+      return;
+    }
+    // match "remove productName"
+    const remMatch = text.match(/remove\s+(.+)/);
+    if (remMatch) {
+      const name = remMatch[1].toLowerCase();
+      const item = orderItems.find((i) =>
+        i.product.productName.toLowerCase().includes(name)
+      );
+      if (item) {
+        removeOrderItem(item.product.id);
+      }
+    }
+  });
+
+  // Fetch categories
   useEffect(() => {
     (async () => {
       try {
@@ -64,7 +93,7 @@ export default function CreateOrder() {
     })();
   }, []);
 
-  // Fetch products by category (still local)
+  // Fetch products by category
   useEffect(() => {
     (async () => {
       if (!selectedCategory) return;
@@ -82,12 +111,12 @@ export default function CreateOrder() {
     dispatch(fetchOrders());
   }, [dispatch]);
 
-  // Keep only active orders (not COMPLETED)
+  // Keep only active orders
   const activeOrders = serverOrders.filter(
     (o) => o.orderStatus !== "COMPLETED"
   );
 
-  // Enrich active orders with productName & productPrice
+  // Enrich active orders
   useEffect(() => {
     (async () => {
       if (!activeOrders.length) {
@@ -99,17 +128,12 @@ export default function CreateOrder() {
         const enriched = activeOrders.map((order) => ({
           ...order,
           orderItems: order.orderItems.map((item) => {
-            // use existing productName/price if present, otherwise lookup
             const name =
               item.productName ??
               mapping[item.productId]?.productName ??
               String(item.productId);
             const price = item.price ?? mapping[item.productId]?.price ?? 0;
-            return {
-              ...item,
-              productName: name,
-              productPrice: price,
-            };
+            return { ...item, productName: name, productPrice: price };
           }),
         }));
         setEnrichedActive(enriched);
@@ -119,14 +143,18 @@ export default function CreateOrder() {
     })();
   }, [activeOrders]);
 
-  // Handlers for local order-building
+  // Handlers for order-building
   const handleQuantityChange = (productId, value) => {
     const qty = Math.max(1, parseInt(value) || 1);
     setQuantityInputs((prev) => ({ ...prev, [productId]: qty }));
   };
 
-  const addToOrder = (product) => {
-    const qty = quantityInputs[product.id] || 1;
+  // Updated to accept optional qtyOverride
+  const addToOrder = (product, qtyOverride) => {
+    const qty =
+      typeof qtyOverride === "number"
+        ? qtyOverride
+        : quantityInputs[product.id] || 1;
     setOrderItems((prev) => {
       const idx = prev.findIndex((i) => i.product.id === product.id);
       if (idx > -1) {
@@ -166,7 +194,6 @@ export default function CreateOrder() {
     setOrders((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  // Finalize local orders by dispatching createOrder thunks
   const finalizeOrders = async () => {
     if (!orders.length) return;
     try {
@@ -178,7 +205,6 @@ export default function CreateOrder() {
     }
   };
 
-  // Update an active order’s status
   const handleActiveOrderStatusChange = async (orderId, newStatus) => {
     try {
       await dispatch(updateOrderStatus({ orderId, newStatus }));
@@ -195,6 +221,17 @@ export default function CreateOrder() {
   return (
     <div className="create-order-layout d-flex" style={{ minHeight: "100vh" }}>
       <Sidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
+
+      {/* Voice controls */}
+      <div style={{ position: "absolute", top: 16, right: 16, zIndex: 1000 }}>
+        <Button size="sm" onClick={start} className="me-2">
+          🎤 Start Voice
+        </Button>
+        <Button size="sm" onClick={stop}>
+          ⏹️ Stop Voice
+        </Button>
+      </div>
+
       <div className="main-content flex-grow-1 p-4">
         {status === "loading" && <div>Loading orders…</div>}
         {status === "failed" && (

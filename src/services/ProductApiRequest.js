@@ -9,7 +9,6 @@ import { getToken } from "../utils/storage"; // Utility to retrieve stored JWT
 export const fetchProductNames = async () => {
   try {
     const token = getToken(); // Retrieve JWT for authorization
-    console.log("Auth token: ", token);
 
     // GET /product with Authorization header
     const response = await axios.get(`${BaseURL}/product`, {
