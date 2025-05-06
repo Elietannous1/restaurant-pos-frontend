@@ -149,37 +149,35 @@ export default function CreateOrder() {
     dispatch(fetchOrders());
   }, [dispatch]);
 
-  // Filter active orders
-  const activeOrders = serverOrders.filter(
-    (o) => o.orderStatus !== "COMPLETED"
-  );
-
-  // Enrich active orders with names & prices
+  // Enrich whenever the source data (serverOrders) changes
   useEffect(() => {
     (async () => {
-      if (!activeOrders.length) {
+      // Pull out only the active ones
+      const active = serverOrders.filter((o) => o.orderStatus !== "COMPLETED");
+      if (!active.length) {
         setEnrichedActive([]);
         return;
       }
+
       try {
         const mapping = await fetchProductNames();
-        const enriched = activeOrders.map((order) => ({
+        const enriched = active.map((order) => ({
           ...order,
-          orderItems: order.orderItems.map((item) => {
-            const name =
+          orderItems: order.orderItems.map((item) => ({
+            productName:
               item.productName ??
               mapping[item.productId]?.productName ??
-              String(item.productId);
-            const price = item.price ?? mapping[item.productId]?.price ?? 0;
-            return { ...item, productName: name, productPrice: price };
-          }),
+              String(item.productId),
+            productPrice: item.price ?? mapping[item.productId]?.price ?? 0,
+            ...item,
+          })),
         }));
         setEnrichedActive(enriched);
       } catch (err) {
         console.error(err);
       }
     })();
-  }, [activeOrders]);
+  }, [serverOrders]);
 
   // Handlers
   const handleQuantityChange = (productId, value) => {
